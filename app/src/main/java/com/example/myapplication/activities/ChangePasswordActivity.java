@@ -84,7 +84,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
             }
 
             if (!password.equals(currentUserPassword)) {
-                showToast("Old password is incorrect");
+                showToast("Mật khẩu cũ không đúng");
                 return;
             }
 
