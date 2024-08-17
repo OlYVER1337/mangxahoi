@@ -74,12 +74,12 @@ public class ChangePasswordActivity extends AppCompatActivity {
             String confirmNewPassword = binding.inputConfirmNewPassword.getText().toString().trim();
 
             if (password.isEmpty() || newPassword.isEmpty() || confirmNewPassword.isEmpty()) {
-                showToast("Please fill in all fields");
+                showToast("Nhập mật khẩu");
                 return;
             }
 
             if (!newPassword.equals(confirmNewPassword)) {
-                showToast("New password and confirm password do not match");
+                showToast("Mật khẩu xác nhận và mật khẩu mới không khớp");
                 return;
             }
 
