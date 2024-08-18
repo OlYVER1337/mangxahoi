@@ -95,6 +95,7 @@ dependencies {
     implementation ("com.google.auth:google-auth-library-oauth2-http:1.14.0")
     implementation ("com.google.firebase:firebase-database:20.0.5")
     implementation ("com.sun.mail:android-activation:1.6.7")
+    implementation ("com.android.volley:volley:1.2.1")
 
 
 

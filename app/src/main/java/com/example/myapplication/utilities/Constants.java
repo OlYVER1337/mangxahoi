@@ -34,5 +34,6 @@ public class Constants
     public static final String REMOTE_MSG_DATA = "data";
     public static final String REMOTE_MSG_REGISTRATION_IDS = "registration_ids";
     public static final String REMOTE_MSG_NOTIFICATION = "notification";
+    public static final String Key_SHARED_PREF ="sharedPreferences ";
 
 }

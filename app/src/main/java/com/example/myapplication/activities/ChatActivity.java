@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.myapplication.adapter.ChatAdapter;
 import com.example.myapplication.databinding.ActivityChatBinding;
 import com.example.myapplication.listeners.ChatAdapterListener;
@@ -53,6 +54,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
@@ -77,11 +79,13 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         binding = ActivityChatBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         preferenceManager = new PreferenceManager(getApplicationContext());
+        handleIntent();
         checkPermissions();
         setListeners();
         loadReceiverDetail();
         init();
         listenMessages();
+
         listenAvailabilityReceiver();
     }
     @Override
@@ -94,6 +98,7 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(fileUrl));
         request.setDescription("Đang tải xuống tệp...");
         request.setTitle("Tải xuống tệp");
+
         request.allowScanningByMediaScanner();
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, getFileNameFromUrl(fileUrl));
@@ -334,6 +339,7 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                     uploadFile(fileUri, fileType);
                 } else if (requestCode == PICK_MEDIA_REQUEST) {
                     uploadMedia(fileUri, fileType);
+
                 }
             }
         }
@@ -443,4 +449,56 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         super.onResume();
         listenAvailabilityReceiver();
     }
+    private void sendNotificationToReceiver(String message) {
+        if (receiverUser.token == null || receiverUser.token.isEmpty()) {
+            return;
+        }
+
+        JSONObject notification = new JSONObject();
+        JSONObject notificationBody = new JSONObject();
+        try {
+            notificationBody.put("title", "New Message from " + preferenceManager.getString(Constants.Key_SENDER_NAME));
+            notificationBody.put("body", message);
+            notificationBody.put("convertionID", conversionID);
+            notification.put("to", receiverUser.token);
+            notification.put("notification", notificationBody);
+
+            sendNotification(notification);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendNotification(JSONObject notification) {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                "https://fcm.googleapis.com/fcm/send",
+                notification,
+                response -> Log.d("FCM", "Notification sent successfully."),
+                error -> Log.d("FCM", "Failed to send notification.")
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "key=" + "516920636445");
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+        };
+
+    }
+    private void handleIntent() {
+        Intent intent = getIntent();
+        if (intent != null) {
+            // Lấy thông tin người nhận từ Intent
+            receiverUser = (User) intent.getSerializableExtra(Constants.Key_USER);
+
+            // Nếu đã có sẵn cuộc trò chuyện thì tải lại
+            if (receiverUser != null) {
+                loadReceiverDetail(); // Load thông tin người nhận
+                listenMessages();     // Nghe tin nhắn từ người nhận
+                checkForConversion(); // Kiểm tra xem có cuộc trò chuyện nào không
+            }
+        }
+    }
+
 }
