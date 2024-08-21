@@ -24,10 +24,12 @@ import androidx.core.content.ContextCompat;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.myapplication.adapter.ChatAdapter;
 import com.example.myapplication.databinding.ActivityChatBinding;
+import com.example.myapplication.firebase.SendFCMNotification;
 import com.example.myapplication.listeners.ChatAdapterListener;
 import com.example.myapplication.models.ChatMessage;
 import com.example.myapplication.models.User;
 import com.example.myapplication.utilities.Constants;
+import com.example.myapplication.utilities.FCMOAuth;
 import com.example.myapplication.utilities.PreferenceManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentChange;
@@ -44,6 +46,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -122,6 +125,7 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         chatAdapter = new ChatAdapter(this,chatMessages, getBitmapFromEncodedString(receiverUser.image), preferenceManager.getString(Constants.Key_USER_ID), this);
         binding.chatRecyclerView.setAdapter(chatAdapter);
         database = FirebaseFirestore.getInstance();
+
     }
 
     private void sendMessage(String type, String content, @Nullable String fileUrl) {
@@ -148,6 +152,19 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             conversion.put(Constants.Key_LAST_MESSAGE, content);
             conversion.put(Constants.Key_TIMESTAMP, new Date());
             addConversion(conversion);
+        }
+        if (!isReceiverAvailable) {
+            try {
+                String accessToken = FCMOAuth.getAccessToken(this);
+                String fcmToken = preferenceManager.getString(Constants.Key_FCM_TOKEN);
+                String messsage = preferenceManager.getString(content);
+                String title="Co tin nhan moi";
+                SendFCMNotification.sendNotification(fcmToken,accessToken,title,messsage);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+
         }
         binding.inputMessage.setText(null);
     }
