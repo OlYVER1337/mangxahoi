@@ -29,6 +29,8 @@ public class Constants
     public static final String REMOTE_MSG_AUTHORIZATION="Authorization";
     public static final String REMOTE_MSG_CONTENT_TYPE="Content-Type";
     public static final String Key_FILE ="file";
+    public static final String Key_PASS_APP="evuq hwod ratx duco";
+    public static final String Key_EMAIL_APP="minh1234564567@gmail.com";
     public static final int VIEW_TYPE_SENT = 1;
     public static final int VIEW_TYPE_RECEIVED = 2;
     public static final String REMOTE_MSG_DATA = "data";

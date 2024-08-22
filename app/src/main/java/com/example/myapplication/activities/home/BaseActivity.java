@@ -1,16 +1,11 @@
-package com.example.myapplication.activities;
-
+package com.example.myapplication.activities.home;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.PreferenceManager;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-
 public class BaseActivity extends AppCompatActivity {
     private DocumentReference documentReference;
     @Override
@@ -21,13 +16,11 @@ public class BaseActivity extends AppCompatActivity {
         documentReference=database.collection(Constants.Key_COLLECTION_USER).document(preferenceManager.getString(Constants.Key_USER_ID));
 
     }
-
     @Override
     protected void onPause() {
         super.onPause();
         documentReference.update(Constants.Key_AVAILABILITY,0);
     }
-
     @Override
     protected void onResume() {
         super.onResume();

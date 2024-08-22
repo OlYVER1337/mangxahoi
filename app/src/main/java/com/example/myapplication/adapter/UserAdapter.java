@@ -14,7 +14,6 @@ import com.example.myapplication.listeners.UserListener;
 import com.example.myapplication.models.User;
 
 import java.util.List;
-
 public class UserAdapter extends  RecyclerView.Adapter<UserAdapter.UserViewHolder>{
     private final List<User> users;
     private final UserListener userListener;
@@ -22,7 +21,6 @@ public class UserAdapter extends  RecyclerView.Adapter<UserAdapter.UserViewHolde
         this.users = users;
         this.userListener = userListener;
     }
-
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -33,18 +31,15 @@ public class UserAdapter extends  RecyclerView.Adapter<UserAdapter.UserViewHolde
         );
         return new UserViewHolder(itemContainerUserBinding);
     }
-
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         holder.setUserData(users.get(position));
 
     }
-
     @Override
     public int getItemCount() {
         return users.size();
     }
-
     class UserViewHolder extends RecyclerView.ViewHolder{
         ItemContainerUserBinding binding;
         UserViewHolder(ItemContainerUserBinding itemContainerUserBinding ){
@@ -57,9 +52,7 @@ public class UserAdapter extends  RecyclerView.Adapter<UserAdapter.UserViewHolde
             binding.imageProfile.setImageBitmap(getUserImage(user.image));
             binding.getRoot().setOnClickListener(v -> userListener.onUserClicked(user));
         }
-
     }
-
     private Bitmap getUserImage(String encodeImage){
         byte[] bytes = Base64.decode(encodeImage, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(bytes,0,bytes.length);

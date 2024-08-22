@@ -5,7 +5,7 @@ public class OtpData {
     public String otp;
 
     public OtpData() {
-        // Default constructor required for calls to DataSnapshot.getValue(OtpData.class)
+
     }
 
     public OtpData(String email, String otp) {

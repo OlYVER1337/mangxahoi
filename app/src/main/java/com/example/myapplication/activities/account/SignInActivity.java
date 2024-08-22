@@ -1,4 +1,4 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.account;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.R;
+import com.example.myapplication.activities.home.MainActivity;
 import com.example.myapplication.databinding.ActivitySignInBinding;
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.PreferenceManager;
@@ -127,10 +128,10 @@ public class SignInActivity extends AppCompatActivity {
                 if (account != null) {
                     firebaseAuthWithGoogle(account.getIdToken());
                 } else {
-                    showToast("Google sign in failed");
+                    showToast("Đặng nhập bằng Google thành công");
                 }
             } catch (ApiException e) {
-                showToast("Google sign in failed: " + e.getMessage());
+                showToast("Đăng nhập bằng Google thất bại do: " + e.getMessage());
             }
         }
     }
@@ -145,7 +146,7 @@ public class SignInActivity extends AppCompatActivity {
                             FirebaseUser user = firebaseAuth.getCurrentUser();
                             saveUserInfo(user);
                         } else {
-                            showToast("Authentication Failed.");
+                            showToast("Ủy quyền thất bại.");
                         }
                     }
                 });
@@ -213,13 +214,13 @@ public class SignInActivity extends AppCompatActivity {
 
     private Boolean isValidSignInDetails() {
         if (binding.inputEmail.getText().toString().trim().isEmpty()) {
-            showToast("Enter email");
+            showToast("Nhập email");
             return false;
         } else if (!Patterns.EMAIL_ADDRESS.matcher(binding.inputEmail.getText().toString()).matches()) {
-            showToast("Enter valid email");
+            showToast("Hãy nhập email");
             return false;
         } else if (binding.inputPassword.getText().toString().trim().isEmpty()) {
-            showToast("Enter password");
+            showToast("Nhập mật khẩu");
             return false;
         } else {
             return true;

@@ -1,4 +1,4 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.account;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -16,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapplication.activities.home.MainActivity;
 import com.example.myapplication.databinding.ActivitySignUpBinding;
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.PreferenceManager;
@@ -141,25 +142,25 @@ public class SignUpActivity extends AppCompatActivity {
 
     private Boolean isValidSignUpDetails() {
         if (encodedImage == null) {
-            showToast("Select profile image");
+            showToast("Chọn ảnh đại diện");
             return false;
         } else if (binding.inputName.getText().toString().trim().isEmpty()) {
-            showToast("Enter name");
+            showToast("Nhập tên");
             return false;
         } else if (binding.inputEmail.getText().toString().trim().isEmpty()) {
-            showToast("Enter email");
+            showToast("Nhập email");
             return false;
         } else if (!Patterns.EMAIL_ADDRESS.matcher(binding.inputEmail.getText().toString()).matches()) {
-            showToast("Enter valid email");
+            showToast("Hãy nhập email");
             return false;
         } else if (binding.inputPassword.getText().toString().trim().isEmpty()) {
-            showToast("Enter password");
+            showToast("Nhập mật khẩu");
             return false;
         } else if (binding.inputConfirmPassword.getText().toString().trim().isEmpty()) {
-            showToast("Confirm your password");
+            showToast("Xác nhận mật khẩu của bạn");
             return false;
         } else if (!binding.inputPassword.getText().toString().equals(binding.inputConfirmPassword.getText().toString())) {
-            showToast("Password and confirm password must be same");
+            showToast("Mật khẩu xác nhận và mật khẩu mới không trùng khớp");
             return false;
         } else {
             return true;

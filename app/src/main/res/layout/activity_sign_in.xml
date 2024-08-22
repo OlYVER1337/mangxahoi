@@ -9,7 +9,7 @@
     android:overScrollMode="never"
     android:padding="24dp"
     android:scrollbars="none"
-    tools:context=".activities.SignInActivity">
+    tools:context=".activities.account.SignInActivity">
 
     <LinearLayout
         android:layout_width="match_parent"

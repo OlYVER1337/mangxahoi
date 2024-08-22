@@ -1,9 +1,11 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.home;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import com.example.myapplication.activities.chat.ChatActivity;
 import com.example.myapplication.adapter.UserAdapter;
 import com.example.myapplication.databinding.ActivityUserBinding;
 import com.example.myapplication.listeners.UserListener;
@@ -86,7 +88,7 @@ public class UserActivity extends BaseActivity implements UserListener {
     }
     @Override
     public void onUserClicked(User user) {
-        Intent intent = new Intent(getApplicationContext(),ChatActivity.class);
+        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
         intent.putExtra(Constants.Key_USER,user);
         startActivity(intent);
         finish();

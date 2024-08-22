@@ -1,4 +1,4 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.account;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapplication.activities.home.MainActivity;
 import com.example.myapplication.databinding.ActivityChangePasswordBinding;
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.PreferenceManager;
@@ -100,10 +101,10 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 .update(user)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        showToast("Password updated successfully");
+                        showToast("Cập Nhật Mật Khẩu Thành Công");
                         finish();
                     } else {
-                        showToast("Failed to update password");
+                        showToast("Cập Nhật Mật Khẩu Thất Bại");
                     }
                 });
     }
@@ -141,8 +142,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     .addOnSuccessListener(unused -> {
                         // Update SharedPreferences
                         preferenceManager.putString(Constants.Key_IMAGE, encodedImage);
-                        showToast("Profile image updated successfully");
-                    }).addOnFailureListener(e -> showToast("Failed to update profile image"));
+                        showToast("Cập nhật ảnh đại diện thành công");
+                    }).addOnFailureListener(e -> showToast("Cập nhật ảnh đại diện thất bại"));
         }
     }
 

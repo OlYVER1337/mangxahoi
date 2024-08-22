@@ -1,7 +1,6 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.account;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -13,18 +12,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.R;
-import com.example.myapplication.models.OtpData;
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.SendEmailTask;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.Random;
 
 public class ForgotPasswordActivity extends AppCompatActivity {

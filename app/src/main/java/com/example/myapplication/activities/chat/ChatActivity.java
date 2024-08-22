@@ -1,4 +1,4 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.chat;
 
 import android.app.DownloadManager;
 import android.content.ContentResolver;
@@ -15,13 +15,12 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.myapplication.activities.home.BaseActivity;
+import com.example.myapplication.activities.home.UserInfoActivity;
 import com.example.myapplication.adapter.ChatAdapter;
 import com.example.myapplication.databinding.ActivityChatBinding;
 import com.example.myapplication.firebase.SendFCMNotification;
@@ -40,16 +39,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,12 +48,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
-
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-
 public class ChatActivity extends BaseActivity implements ChatAdapterListener {
     private static final int PICK_FILE_REQUEST = 1;
     private static final int PICK_MEDIA_REQUEST = 2;
@@ -70,12 +58,10 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
     private User receiverUser;
     private List<ChatMessage> chatMessages;
     private ChatAdapter chatAdapter;
-
     private FirebaseFirestore database;
     private PreferenceManager preferenceManager;
     private String conversionID = null;
     private Boolean isReceiverAvailable = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,7 +74,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         loadReceiverDetail();
         init();
         listenMessages();
-
         listenAvailabilityReceiver();
     }
     @Override
@@ -96,16 +81,13 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         Log.d("ChatActivity", "Đang tải xuống tệp: " + fileUrl);
         downloadFile(fileUrl);
     }
-
     private void downloadFile(String fileUrl) {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(fileUrl));
         request.setDescription("Đang tải xuống tệp...");
         request.setTitle("Tải xuống tệp");
-
         request.allowScanningByMediaScanner();
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, getFileNameFromUrl(fileUrl));
-
         // Lấy dịch vụ tải xuống và xếp hàng tệp
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {
@@ -115,19 +97,15 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             Toast.makeText(this, "Quản lý tải xuống không khả dụng", Toast.LENGTH_SHORT).show();
         }
     }
-
     private String getFileNameFromUrl(String url) {
         return Uri.parse(url).getLastPathSegment();
     }
-
     private void init() {
         chatMessages = new ArrayList<>();
         chatAdapter = new ChatAdapter(this,chatMessages, getBitmapFromEncodedString(receiverUser.image), preferenceManager.getString(Constants.Key_USER_ID), this);
         binding.chatRecyclerView.setAdapter(chatAdapter);
         database = FirebaseFirestore.getInstance();
-
     }
-
     private void sendMessage(String type, String content, @Nullable String fileUrl) {
         HashMap<String, Object> message = new HashMap<>();
         message.put(Constants.Key_SENDER_ID, preferenceManager.getString(Constants.Key_USER_ID));
@@ -158,17 +136,15 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                 String accessToken = FCMOAuth.getAccessToken(this);
                 String fcmToken = preferenceManager.getString(Constants.Key_FCM_TOKEN);
                 String messsage = preferenceManager.getString(content);
-                String title="Co tin nhan moi";
+                String title="Có tin nhắn mới";
                 SendFCMNotification.sendNotification(fcmToken,accessToken,title,messsage);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
-
         }
         binding.inputMessage.setText(null);
     }
-
     private final EventListener<QuerySnapshot> eventListener = (value, error) -> {
         if (error != null) {
             return;
@@ -204,8 +180,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             checkForConversion();
         }
     };
-
-
     private void listenAvailabilityReceiver() {
         database.collection(Constants.Key_COLLECTION_USER).document(
                 receiverUser.id
@@ -229,7 +203,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             }
         });
     }
-
     private void listenMessages() {
         database.collection(Constants.Key_COLLECTION_CHAT)
                 .whereEqualTo(Constants.Key_SENDER_ID, preferenceManager.getString(Constants.Key_USER_ID))
@@ -240,14 +213,10 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                 .whereEqualTo(Constants.Key_RECEIVER_ID, preferenceManager.getString(Constants.Key_USER_ID))
                 .addSnapshotListener(eventListener);
     }
-
-
-
     private Bitmap getBitmapFromEncodedString(String encodedImage) {
         byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
-
     private void loadReceiverDetail() {
         receiverUser = (User) getIntent().getSerializableExtra(Constants.Key_USER);
         byte[] bytes = Base64.decode(receiverUser.image, Base64.DEFAULT);
@@ -278,7 +247,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             startActivity(intent);
         });
     }
-
     private void setListeners() {
         binding.imageBack.setOnClickListener(v -> onBackPressed());
         binding.layoutSend.setOnClickListener(v -> sendMessage("text", binding.inputMessage.getText().toString(), null));
@@ -286,8 +254,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         binding.imageSendMedia.setOnClickListener(v -> openFilePicker(PICK_MEDIA_REQUEST));
         binding.buttonDeleteChat.setOnClickListener(v -> deleteChat());
     }
-
-
     private void openFilePicker(int requestCode) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         if (requestCode == PICK_FILE_REQUEST) {
@@ -297,7 +263,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         }
         startActivityForResult(intent, requestCode);
     }
-
     @Override
     public void onOpenFile(String fileUrl) {
         String mimeType = MimeTypeMap.getFileExtensionFromUrl(fileUrl);
@@ -314,37 +279,31 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                     intent.putExtra("videoUrl", fileUrl);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(this, "Unsupported file type", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "file này không được hỗ trợ", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(this, "Unknown file type", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Không đinh dạng được file", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(this, "Invalid file URL", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi URL", Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
-
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE) != PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{READ_EXTERNAL_STORAGE}, 1);
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1) {
             if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Đã có quyền truy cập", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Quyền truy cập bị từ chối", Toast.LENGTH_SHORT).show();
             }
         }
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -361,31 +320,27 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             }
         }
     }
-
     private String getFileType(Uri uri) {
         ContentResolver contentResolver = getContentResolver();
         MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
         return mimeTypeMap.getExtensionFromMimeType(contentResolver.getType(uri));
     }
-
     private void uploadFile(Uri fileUri, String fileType) {
         StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("files/" + System.currentTimeMillis() + "." + fileType);
         storageReference.putFile(fileUri)
                 .addOnSuccessListener(taskSnapshot -> storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
                     sendMessage("file", "File attached", uri.toString());
                 }))
-                .addOnFailureListener(e -> Toast.makeText(ChatActivity.this, "File upload failed", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> Toast.makeText(ChatActivity.this, "Tải file thất bại", Toast.LENGTH_SHORT).show());
     }
-
     private void uploadMedia(Uri mediaUri, String fileType) {
         StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("media/" + System.currentTimeMillis() + "." + fileType);
         storageReference.putFile(mediaUri)
                 .addOnSuccessListener(taskSnapshot -> storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
                     sendMessage("media", "Đã gửi một tập tin", uri.toString());
                 }))
-                .addOnFailureListener(e -> Toast.makeText(ChatActivity.this, "tải file thất bại", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> Toast.makeText(ChatActivity.this, "Tải file thất bại", Toast.LENGTH_SHORT).show());
     }
-
     private void deleteChat() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection(Constants.Key_COLLECTION_CHAT)
@@ -399,7 +354,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                         }
                     }
                 });
-
         db.collection(Constants.Key_COLLECTION_CHAT)
                 .whereEqualTo(Constants.Key_SENDER_ID, receiverUser.id)
                 .whereEqualTo(Constants.Key_RECEIVER_ID, preferenceManager.getString(Constants.Key_USER_ID))
@@ -411,7 +365,7 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                         }
                     }
                 });
-        Toast.makeText(this, "Chat deleted", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Xóa cuộc hội thoại", Toast.LENGTH_SHORT).show();
         finish();
     }
 
@@ -420,7 +374,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                 .add(conversion)
                 .addOnSuccessListener(documentReference -> conversionID = documentReference.getId());
     }
-
     private void updateConversion(String message) {
         DocumentReference documentReference = database.collection(Constants.Key_COLLECTION_CONVERSATIONS).document(conversionID);
         documentReference.update(
@@ -428,7 +381,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                 Constants.Key_TIMESTAMP, new Date()
         );
     }
-
     private void checkForConversion() {
         if (chatMessages.size() != 0) {
             checkForConversionRemotely(
@@ -441,7 +393,6 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             );
         }
     }
-
     private void checkForConversionRemotely(String senderId, String receiverId) {
         database.collection(Constants.Key_COLLECTION_CONVERSATIONS)
                 .whereEqualTo(Constants.Key_SENDER_ID, senderId)
@@ -449,59 +400,19 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                 .get()
                 .addOnCompleteListener(conversionOnCompleteListener);
     }
-
     private final OnCompleteListener<QuerySnapshot> conversionOnCompleteListener = task -> {
         if (task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
             DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
             conversionID = documentSnapshot.getId();
         }
     };
-
     private String getReadableDateTime(Date date) {
         return new SimpleDateFormat("MMMM dd, yyyy - hh:mm a", Locale.getDefault()).format(date);
     }
-
     @Override
     protected void onResume() {
         super.onResume();
         listenAvailabilityReceiver();
-    }
-    private void sendNotificationToReceiver(String message) {
-        if (receiverUser.token == null || receiverUser.token.isEmpty()) {
-            return;
-        }
-
-        JSONObject notification = new JSONObject();
-        JSONObject notificationBody = new JSONObject();
-        try {
-            notificationBody.put("title", "New Message from " + preferenceManager.getString(Constants.Key_SENDER_NAME));
-            notificationBody.put("body", message);
-            notificationBody.put("convertionID", conversionID);
-            notification.put("to", receiverUser.token);
-            notification.put("notification", notificationBody);
-
-            sendNotification(notification);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendNotification(JSONObject notification) {
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-                "https://fcm.googleapis.com/fcm/send",
-                notification,
-                response -> Log.d("FCM", "Notification sent successfully."),
-                error -> Log.d("FCM", "Failed to send notification.")
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", "key=" + "516920636445");
-                headers.put("Content-Type", "application/json");
-                return headers;
-            }
-        };
-
     }
     private void handleIntent() {
         Intent intent = getIntent();
@@ -517,5 +428,4 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
             }
         }
     }
-
 }

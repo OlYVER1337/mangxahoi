@@ -33,8 +33,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.senderId = senderId;
         this.listener = listener;
     }
-
-
     @Override
     public int getItemViewType(int position) {
         if (chatMessages.get(position).senderId.equals(senderId)) {
@@ -43,7 +41,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return 2;
         }
     }
-
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -61,7 +58,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             );
         }
     }
-
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ChatMessage chatMessage = chatMessages.get(position);
@@ -71,12 +67,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ((ReceivedMessageViewHolder) holder).setData(chatMessage, receiverProfileImage, listener);
         }
     }
-
     @Override
     public int getItemCount() {
         return chatMessages.size();
     }
-
     static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         private final TextView textMessage;
         private final ImageView imageMessage;
@@ -86,7 +80,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textMessage = itemView.findViewById(R.id.textMessage);
             imageMessage = itemView.findViewById(R.id.imageMessage);
         }
-
         void setData(ChatMessage chatMessage, ChatAdapterListener listener) {
             if ("media".equals(chatMessage.fileType) && chatMessage.fileUrl != null) {
                 textMessage.setVisibility(View.GONE);
@@ -113,7 +106,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
     }
-
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         private final TextView textMessage;
         private final ImageView imageMessage;
@@ -125,7 +117,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             imageMessage = itemView.findViewById(R.id.imageMessage);
             imageProfile = itemView.findViewById(R.id.imageProfile);
         }
-
         void setData(ChatMessage chatMessage, Bitmap receiverProfileImage, ChatAdapterListener listener) {
             if ("media".equals(chatMessage.fileType) && chatMessage.fileUrl != null) {
                 textMessage.setVisibility(View.GONE);
@@ -139,7 +130,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else if ("file".equals(chatMessage.fileType) && chatMessage.fileUrl != null) {
                 textMessage.setVisibility(View.VISIBLE);
                 imageMessage.setVisibility(View.GONE);
-                textMessage.setText(chatMessage.message); // Assuming you have a placeholder text for files
+                textMessage.setText(chatMessage.message); // Giả sử bạn có văn bản giữ chỗ cho các tệp
                 textMessage.setOnClickListener(v -> listener.onOpenFile(chatMessage.fileUrl));
                 textMessage.setOnLongClickListener(v -> {
                     listener.onDownloadFile(chatMessage.fileUrl);

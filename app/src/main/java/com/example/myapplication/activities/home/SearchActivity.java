@@ -1,4 +1,4 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.home;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.myapplication.activities.chat.ChatActivity;
 import com.example.myapplication.adapter.RecentConversationsAdapter;
 import com.example.myapplication.databinding.ActivitySearchBinding;
 import com.example.myapplication.listeners.ConversionListener;
@@ -41,7 +42,6 @@ public class SearchActivity extends AppCompatActivity implements ConversionListe
         setListeners();
         setupImageBack();
     }
-
     private void setListeners() {
         binding.inputSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -56,7 +56,6 @@ public class SearchActivity extends AppCompatActivity implements ConversionListe
             public void afterTextChanged(Editable editable) {}
         });
     }
-
     private void setupImageBack() {
         binding.imageBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,12 +75,10 @@ public class SearchActivity extends AppCompatActivity implements ConversionListe
         }
         conversationAdapter.notifyDataSetChanged();
     }
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
     }
-
     @Override
     public void onConversionClick(User user) {
         Intent intent = new Intent(SearchActivity.this, ChatActivity.class);

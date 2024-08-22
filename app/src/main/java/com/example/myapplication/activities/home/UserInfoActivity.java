@@ -1,29 +1,18 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.home;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.util.Base64;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-import com.example.myapplication.models.ChatMessage;
-import com.example.myapplication.models.User;
+
 import com.example.myapplication.utilities.Constants;
-import androidx.annotation.NonNull;
+
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.myapplication.R;
-import com.example.myapplication.databinding.ActivityMainBinding;
+
 import com.example.myapplication.databinding.ActivityUserInfoBinding;
-import com.google.firebase.firestore.DocumentChange;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FieldValue;
 import com.example.myapplication.utilities.PreferenceManager;
 
 import org.json.JSONException;
@@ -107,7 +96,7 @@ public class UserInfoActivity extends AppCompatActivity  {
                     SharedPreferences.Editor editor = prefs.edit();
                     editor.putString("nicknames", nicknames.toString());
                     editor.apply();
-                    Toast.makeText(UserInfoActivity.this, "Nickname updated", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UserInfoActivity.this, "Cập nhật biệt danh", Toast.LENGTH_SHORT).show();
                     binding.nicknameEditText.setText("");
                 } catch (JSONException e) {
                     e.printStackTrace();

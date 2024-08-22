@@ -1,4 +1,4 @@
-package com.example.myapplication.activities;
+package com.example.myapplication.activities.home;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,6 +10,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.myapplication.activities.account.ChangePasswordActivity;
+import com.example.myapplication.activities.account.SignInActivity;
+import com.example.myapplication.activities.chat.ChatActivity;
 import com.example.myapplication.adapter.RecentConversationsAdapter;
 import com.example.myapplication.databinding.ActivityMainBinding;
 import com.example.myapplication.listeners.ConversionListener;
@@ -39,7 +42,6 @@ public class MainActivity extends BaseActivity implements ConversionListener {
     private List<ChatMessage> conversation;
     private RecentConversationsAdapter conversationsAdapter;
     private FirebaseFirestore database;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,27 +54,23 @@ public class MainActivity extends BaseActivity implements ConversionListener {
         setListeners();
         listenConvertasion();
     }
-
     private void init() {
         conversation = new ArrayList<>();
         conversationsAdapter = new RecentConversationsAdapter(conversation, this);
         binding.conversationRecyclerView.setAdapter(conversationsAdapter);
         database = FirebaseFirestore.getInstance();
     }
-
     private void setListeners() {
         binding.imageProfile.setOnClickListener(v -> startActivity(new Intent(getApplicationContext(), ChangePasswordActivity.class)));
         binding.imageSignOut.setOnClickListener(v -> signOut());
         binding.fabNewChat.setOnClickListener(v -> startActivity(new Intent(getApplicationContext(), UserActivity.class)));
         binding.imageSearch.setOnClickListener(v -> startSearchActivity());
     }
-
     private void startSearchActivity() {
         Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
         intent.putParcelableArrayListExtra("conversations", new ArrayList<>(conversation));
         startActivity(intent);
     }
-
     private void loadUserDetail() {
         binding.textName.setText(preferenceManager.getString(Constants.Key_NAME));
         String encodedImage = preferenceManager.getString(Constants.Key_IMAGE);
@@ -82,19 +80,17 @@ public class MainActivity extends BaseActivity implements ConversionListener {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 binding.imageProfile.setImageBitmap(bitmap);
             } catch (IllegalArgumentException e) {
-                showToast("Failed to load user image");
+                showToast("Tải ảnh người dùng thất bại");
                 Log.e("MainActivity", "Failed to decode Base64 string", e);
             }
         } else {
-            showToast("User image not found");
+            showToast("Không thể tìm thấy ảnh đại diện của người dùng");
             Log.e("MainActivity", "User image not found");
         }
     }
-
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
-
     private void listenConvertasion() {
         database.collection(Constants.Key_COLLECTION_CONVERSATIONS)
                 .whereEqualTo(Constants.Key_SENDER_ID, preferenceManager.getString(Constants.Key_USER_ID))
@@ -103,7 +99,6 @@ public class MainActivity extends BaseActivity implements ConversionListener {
                 .whereEqualTo(Constants.Key_RECEIVER_ID, preferenceManager.getString(Constants.Key_USER_ID))
                 .addSnapshotListener(eventListener);
     }
-
     private final EventListener<QuerySnapshot> eventListener = (value, error) -> {
         if (error != null) {
             return;
@@ -121,7 +116,6 @@ public class MainActivity extends BaseActivity implements ConversionListener {
                             break;
                         }
                     }
-
                     if (!conversationExists) {
 
                         ChatMessage chatMessage = new ChatMessage();
@@ -174,36 +168,27 @@ public class MainActivity extends BaseActivity implements ConversionListener {
             binding.progressBar.setVisibility(View.GONE);
         }
     };
-
-
-
     private void getToken() {
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::updateToken);
     }
-
     private void updateToken(String token) {
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         DocumentReference documentReference = database.collection(Constants.Key_COLLECTION_USER)
                 .document(preferenceManager.getString(Constants.Key_USER_ID));
         documentReference.update(Constants.Key_FCM_TOKEN, token).addOnFailureListener(e -> showToast("Unable to update token"));
     }
-
     private void signOut() {
-        showToast("Signing out...");
+        showToast("Đăng xuất...");
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         String userId = preferenceManager.getString(Constants.Key_USER_ID);
-
         if (userId == null || userId.isEmpty()) {
-            showToast("User ID is null or empty");
+            showToast("Không tìm thấy người dùng");
             return;
         }
-
         DocumentReference documentReference = database.collection(Constants.Key_COLLECTION_USER)
                 .document(userId);
-
         HashMap<String, Object> updates = new HashMap<>();
         updates.put(Constants.Key_FCM_TOKEN, FieldValue.delete());
-
         documentReference.update(updates)
                 .addOnSuccessListener(unused -> {
                     preferenceManager.clear();
@@ -213,11 +198,9 @@ public class MainActivity extends BaseActivity implements ConversionListener {
                     finish();
                 })
                 .addOnFailureListener(e -> {
-                    showToast("Unable to sign out");
-
+                    showToast("Không thể đăng xuất");
                 });
     }
-
     @Override
     public void onConversionClick(User user) {
         Intent intent = new Intent(getApplicationContext(), ChatActivity.class);

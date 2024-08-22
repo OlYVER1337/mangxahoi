@@ -27,13 +27,13 @@ public class SendEmailTask extends AsyncTask<Void, Void, Void> {
         Session session = Session.getInstance(props, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("minh1234564567@gmail.com", "evuq hwod ratx duco");
+                return new PasswordAuthentication(Constants.Key_EMAIL_APP, Constants.Key_PASS_APP);
             }
         });
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("minh1234564567@gmail.com"));
+            message.setFrom(new InternetAddress(Constants.Key_EMAIL_APP));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
             message.setSubject("Your OTP Code");
             message.setText("Your OTP code is: " + otp);

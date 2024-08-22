@@ -27,37 +27,37 @@
             android:name=".activities.VerifyOtpActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.ForgotPasswordActivity"
+            android:name=".activities.account.ForgotPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.VideoViewActivity"
+            android:name=".activities.chat.VideoViewActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.ImageViewActivity"
+            android:name=".activities.chat.ImageViewActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.SearchActivity"
+            android:name=".activities.home.SearchActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.UserInfoActivity"
+            android:name=".activities.home.UserInfoActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.ChangePasswordActivity"
+            android:name=".activities.account.ChangePasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.ChatActivity"
+            android:name=".activities.chat.ChatActivity"
             android:exported="false"
             android:theme="@style/Theme.MyApplication"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activities.UserActivity"
+            android:name=".activities.home.UserActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.SignUpActivity"
+            android:name=".activities.account.SignUpActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activities.SignInActivity"
+            android:name=".activities.account.SignInActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -67,7 +67,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activities.home.MainActivity"
             android:exported="true" />
 
         <service
