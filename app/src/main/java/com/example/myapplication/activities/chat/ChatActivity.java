@@ -368,7 +368,25 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         Toast.makeText(this, "Xóa cuộc hội thoại", Toast.LENGTH_SHORT).show();
         finish();
     }
-
+    @Override
+    public void onDeleteMessage(ChatMessage chatMessage) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection(Constants.Key_COLLECTION_CHAT)
+                .whereEqualTo(Constants.Key_SENDER_ID, chatMessage.senderId)
+                .whereEqualTo(Constants.Key_RECEIVER_ID, chatMessage.receiverId)
+                .whereEqualTo(Constants.Key_TIMESTAMP, chatMessage.dateObject)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                            db.collection(Constants.Key_COLLECTION_CHAT).document(document.getId()).delete();
+                        }
+                        chatMessages.remove(chatMessage); // Xóa khỏi danh sách cục bộ
+                        chatAdapter.notifyDataSetChanged(); // Cập nhật adapter
+                        Toast.makeText(this, "Đã xóa tin nhắn", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
     private void addConversion(HashMap<String, Object> conversion) {
         database.collection(Constants.Key_COLLECTION_CONVERSATIONS)
                 .add(conversion)

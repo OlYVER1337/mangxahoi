@@ -1,5 +1,6 @@
 package com.example.myapplication.adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
@@ -66,6 +67,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else {
             ((ReceivedMessageViewHolder) holder).setData(chatMessage, receiverProfileImage, listener);
         }
+        // Thêm sự kiện nhấn giữ để xóa tin nhắn
+        holder.itemView.setOnLongClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Xóa tin nhắn")
+                    .setMessage("Bạn có chắc chắn muốn xóa tin nhắn này không?")
+                    .setPositiveButton("Có", (dialog, which) -> {
+                        listener.onDeleteMessage(chatMessage); // Gọi phương thức xóa
+                    })
+                    .setNegativeButton("Không", null)
+                    .show();
+            return true;
+        });
     }
     @Override
     public int getItemCount() {
