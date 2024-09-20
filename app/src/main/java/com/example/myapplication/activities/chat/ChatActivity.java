@@ -68,7 +68,7 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
         binding = ActivityChatBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         preferenceManager = new PreferenceManager(getApplicationContext());
-        handleIntent();
+        
         checkPermissions();
         setListeners();
         loadReceiverDetail();
