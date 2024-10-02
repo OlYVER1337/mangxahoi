@@ -172,8 +172,17 @@ public class SignInActivity extends AppCompatActivity {
                             startActivity(intent);
                             finish();
                         } else {
+                            // Lấy ảnh đại diện của người dùng
                             String photoUrl = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
-                            String encodedImage = photoUrl != null ? ImageUtil.encodeImageToBase64(photoUrl) : null;
+                            String encodedImage;
+
+                            // Kiểm tra xem có ảnh đại diện hay không, nếu không sử dụng ảnh mặc định
+                            if (photoUrl != null) {
+                                encodedImage = ImageUtil.encodeImageToBase64(photoUrl);
+                            } else {
+                                // Sử dụng ảnh mặc định
+                                encodedImage = ImageUtil.encodeImageToBase64(String.valueOf(R.drawable.default_user_image));
+                            }
 
                             HashMap<String, Object> userMap = new HashMap<>();
                             userMap.put(Constants.Key_NAME, user.getDisplayName());
