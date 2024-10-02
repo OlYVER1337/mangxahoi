@@ -134,7 +134,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void uploadImageToFirebase(Bitmap bitmap) {
-        String encodedImage = encodeImageToBase64(bitmap);
+        String encodedImage = encodeImage(bitmap); // Sử dụng hàm encodeImage đã cho
         if (encodedImage != null) {
             // Update Firestore with the new image
             database.collection(Constants.Key_COLLECTION_USER).document(currentUserId)
@@ -147,11 +147,14 @@ public class ChangePasswordActivity extends AppCompatActivity {
         }
     }
 
-    private String encodeImageToBase64(Bitmap bitmap) {
+    private String encodeImage(Bitmap bitmap) {
+        int previewWidth = 150;
+        int previewHeight = bitmap.getHeight() * previewWidth / bitmap.getWidth();
+        Bitmap previewBitmap = Bitmap.createScaledBitmap(bitmap, previewWidth, previewHeight, false);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream.toByteArray();
-        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+        previewBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
+        byte[] bytes = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
 
     private void showToast(String message) {
