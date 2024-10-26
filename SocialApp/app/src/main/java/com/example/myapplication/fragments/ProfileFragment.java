@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -99,23 +100,46 @@ public class ProfileFragment extends Fragment {
     }
 
     private void signOut() {
-        showToast("Đang đăng xuất...");
-        FirebaseFirestore database = FirebaseFirestore.getInstance();
-        DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_USERS).document(
-                preferenceManager.getString(Constants.KEY_USER_ID)
-        );
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put(Constants.KEY_FCM_TOKEN, FieldValue.delete());
-        documentReference.update(updates)
-                .addOnSuccessListener(unused -> {
-                    preferenceManager.clear();
-                    startActivity(new Intent(getActivity(), SignInActivity.class));
-                    if (getActivity() != null) {
-                        getActivity().finish();
-                    }
-                })
-                .addOnFailureListener(e -> showToast("Không thể đăng xuất"));
+        String userId = preferenceManager.getString(Constants.KEY_USER_ID);
+        if (userId != null && !userId.isEmpty()) {
+            FirebaseFirestore.getInstance()
+                    .collection(Constants.KEY_COLLECTION_USERS)
+                    .document(userId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            documentSnapshot.getReference()
+                                    .update(Constants.KEY_FCM_TOKEN, "")
+                                    .addOnSuccessListener(unused -> {
+                                        preferenceManager.clear();
+                                        navigateToSignIn();
+                                    });
+                        } else {
+                            preferenceManager.clear();
+                            navigateToSignIn();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        preferenceManager.clear();
+                        navigateToSignIn();
+                    });
+        } else {
+            preferenceManager.clear();
+            navigateToSignIn();
+        }
     }
+
+    private void navigateToSignIn() {
+        Intent intent = new Intent(getActivity(), SignInActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
+    }
+
+
+
 
     @Override
     public void onDestroyView() {

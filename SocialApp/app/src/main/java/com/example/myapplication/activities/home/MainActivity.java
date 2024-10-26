@@ -43,18 +43,22 @@ public class MainActivity extends BaseActivity  implements BottomNavigationView.
                 return;
             }
 
-            binding.bottomNavigationView.setOnNavigationItemSelectedListener(this);
-
-            loadFragment(new HomeFragment());
-
-
-            getToken();
+            FirebaseMessaging.getInstance().getToken()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            updateToken(task.getResult());
+                            binding.bottomNavigationView.setOnNavigationItemSelectedListener(this);
+                            loadFragment(new HomeFragment());
+                        }
+                    });
         } catch (Exception e) {
             Log.e("MainActivity", "Error in onCreate", e);
             Toast.makeText(this, "An unexpected error occurred. Please try again.", Toast.LENGTH_LONG).show();
             finish();
         }
     }
+
+
 
 
 
@@ -112,16 +116,32 @@ public class MainActivity extends BaseActivity  implements BottomNavigationView.
 
     private void getToken() {
         FirebaseMessaging.getInstance().getToken()
-                .addOnSuccessListener(this::updateToken);
+                .addOnSuccessListener(this::updateToken)
+                .addOnFailureListener(e -> showToast("Không thể lấy token"));
     }
 
     private void updateToken(String token) {
-        FirebaseFirestore database = FirebaseFirestore.getInstance();
-        DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_USERS)
-                .document(preferenceManager.getString(Constants.KEY_USER_ID));
-        documentReference.update(Constants.KEY_FCM_TOKEN, token)
-                .addOnFailureListener(e -> showToast("Không thể cập nhật token"));
+        String userId = preferenceManager.getString(Constants.KEY_USER_ID);
+        if (userId != null && !userId.isEmpty()) {
+            FirebaseFirestore.getInstance()
+                    .collection(Constants.KEY_COLLECTION_USERS)
+                    .document(userId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            documentSnapshot.getReference().update(Constants.KEY_FCM_TOKEN, token)
+                                    .addOnSuccessListener(unused -> {
+                                        Log.d("MainActivity", "Token updated successfully");
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("MainActivity", "Token update failed: " + e.getMessage());
+                                    });
+                        }
+                    });
+        }
     }
+
+
 
 
     private void showToast(String message) {

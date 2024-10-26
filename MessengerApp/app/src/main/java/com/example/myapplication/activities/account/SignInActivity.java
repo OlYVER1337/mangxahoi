@@ -24,6 +24,7 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
@@ -31,6 +32,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 public class SignInActivity extends AppCompatActivity {
@@ -40,6 +43,7 @@ public class SignInActivity extends AppCompatActivity {
     private PreferenceManager preferenceManager;
     private GoogleSignInClient googleSignInClient;
     private FirebaseAuth firebaseAuth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,13 +57,16 @@ public class SignInActivity extends AppCompatActivity {
             finish();
         }
 
+
         binding = ActivitySignInBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setListeners();
 
         configureGoogleSignIn();
         firebaseAuth = FirebaseAuth.getInstance();
+
     }
+
 
     private void configureGoogleSignIn() {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -80,34 +87,71 @@ public class SignInActivity extends AppCompatActivity {
         binding.googleSignInButton.setOnClickListener(v -> signInWithGoogle());
         binding.buttonResetPassword.setOnClickListener(v->
                 startActivity(new Intent(getApplicationContext(), ForgotPasswordActivity.class))
-                );
+        );
     }
 
     private void signIn() {
         loading(true);
+        String email = binding.inputEmail.getText().toString();
+        String password = binding.inputPassword.getText().toString();
+
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+                            fetchUserDataFromFirestore(user.getUid());
+                        } else {
+                            loading(false);
+                            showToast("Authentication failed: " + task.getException().getMessage());
+                        }
+                    }
+                });
+    }
+
+    private void fetchUserDataFromFirestore(String userId) {
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         database.collection(Constants.Key_COLLECTION_USER)
-                .whereEqualTo(Constants.Key_EMAIL, binding.inputEmail.getText().toString())
-                .whereEqualTo(Constants.Key_PASSWORD, binding.inputPassword.getText().toString())
+                .document(userId)
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         loading(false);
-                        if (task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
-                            DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            DocumentSnapshot documentSnapshot = task.getResult();
                             preferenceManager.putBoolean(Constants.Key_IS_SIGNED_IN, true);
                             preferenceManager.putString(Constants.Key_USER_ID, documentSnapshot.getId());
                             preferenceManager.putString(Constants.Key_NAME, documentSnapshot.getString(Constants.Key_NAME));
                             preferenceManager.putString(Constants.Key_IMAGE, documentSnapshot.getString(Constants.Key_IMAGE));
                             preferenceManager.putString(Constants.Key_EMAIL, documentSnapshot.getString(Constants.Key_EMAIL));
+                            if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUEST_TIMESTAMPS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
+                                        .document(userId)
+                                        .update(Constants.Key_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
+                            }
+                            if (!documentSnapshot.contains(Constants.Key_FRIENDS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
+                                        .document(userId)
+                                        .update(Constants.Key_FRIENDS, new ArrayList<String>());
+                            }
+                            if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUESTS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
+                                        .document(userId)
+                                        .update(Constants.Key_FRIEND_REQUESTS, new ArrayList<String>());
+                            }
+                            if (!documentSnapshot.contains(Constants.Key_SENT_FRIEND_REQUESTS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
+                                        .document(userId)
+                                        .update(Constants.Key_SENT_FRIEND_REQUESTS, new ArrayList<String>());
+                            }
                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);
-                            finish();  // Đảm bảo rằng SignInActivity kết thúc để người dùng không thể quay lại nó
+                            finish();
                         } else {
-                            showToast("Unable to sign in");
-                            Log.e("SignIn", "Sign in failed: No matching documents found.");
+                            showToast("Unable to fetch user data");
                         }
                     }
                 });
@@ -162,32 +206,48 @@ public class SignInActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
                             DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
+
+                            // Kiểm tra và thêm các field mới nếu chưa có
+                            HashMap<String, Object> updates = new HashMap<>();
+                            if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUEST_TIMESTAMPS)) {
+                                updates.put(Constants.Key_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
+                            }
+                            if (!documentSnapshot.contains(Constants.Key_FRIENDS)) {
+                                updates.put(Constants.Key_FRIENDS, new ArrayList<String>());
+                            }
+                            if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUESTS)) {
+                                updates.put(Constants.Key_FRIEND_REQUESTS, new ArrayList<String>());
+                            }
+                            if (!documentSnapshot.contains(Constants.Key_SENT_FRIEND_REQUESTS)) {
+                                updates.put(Constants.Key_SENT_FRIEND_REQUESTS, new ArrayList<String>());
+                            }
+
+                            if (!updates.isEmpty()) {
+                                database.collection(Constants.Key_COLLECTION_USER)
+                                        .document(documentSnapshot.getId())
+                                        .update(updates);
+                            }
+
                             preferenceManager.putBoolean(Constants.Key_IS_SIGNED_IN, true);
                             preferenceManager.putString(Constants.Key_USER_ID, documentSnapshot.getId());
                             preferenceManager.putString(Constants.Key_NAME, documentSnapshot.getString(Constants.Key_NAME));
                             preferenceManager.putString(Constants.Key_IMAGE, documentSnapshot.getString(Constants.Key_IMAGE));
                             preferenceManager.putString(Constants.Key_EMAIL, documentSnapshot.getString(Constants.Key_EMAIL));
-                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                            finish();
+                            navigateToMainActivity();
                         } else {
-                            // Lấy ảnh đại diện của người dùng
                             String photoUrl = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
-                            String encodedImage;
-
-                            // Kiểm tra xem có ảnh đại diện hay không, nếu không sử dụng ảnh mặc định
-                            if (photoUrl != null) {
-                                encodedImage = ImageUtil.encodeImageToBase64(photoUrl);
-                            } else {
-                                // Sử dụng ảnh mặc định
-                                encodedImage = ImageUtil.encodeImageToBase64(String.valueOf(R.drawable.default_user_image));
-                            }
+                            String encodedImage = photoUrl != null ?
+                                    ImageUtil.encodeImageToBase64(photoUrl) :
+                                    ImageUtil.encodeImageToBase64(String.valueOf(R.drawable.default_user_image));
 
                             HashMap<String, Object> userMap = new HashMap<>();
                             userMap.put(Constants.Key_NAME, user.getDisplayName());
                             userMap.put(Constants.Key_EMAIL, user.getEmail());
                             userMap.put(Constants.Key_IMAGE, encodedImage);
+                            userMap.put(Constants.Key_FRIENDS, new ArrayList<String>());
+                            userMap.put(Constants.Key_FRIEND_REQUESTS, new ArrayList<String>());
+                            userMap.put(Constants.Key_SENT_FRIEND_REQUESTS, new ArrayList<String>());
+                            userMap.put(Constants.Key_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
 
                             database.collection(Constants.Key_COLLECTION_USER)
                                     .add(userMap)
@@ -197,15 +257,23 @@ public class SignInActivity extends AppCompatActivity {
                                         preferenceManager.putString(Constants.Key_NAME, user.getDisplayName());
                                         preferenceManager.putString(Constants.Key_IMAGE, encodedImage);
                                         preferenceManager.putString(Constants.Key_EMAIL, user.getEmail());
-                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        startActivity(intent);
-                                        finish();
+                                        navigateToMainActivity();
                                     });
                         }
                     }
                 });
     }
+
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+
+
+
 
     private void loading(Boolean isLoading) {
         if (isLoading) {
@@ -245,3 +313,4 @@ public class SignInActivity extends AppCompatActivity {
         }
     }
 }
+

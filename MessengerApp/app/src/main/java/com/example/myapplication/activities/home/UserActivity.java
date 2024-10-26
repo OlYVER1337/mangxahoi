@@ -30,67 +30,95 @@ public class UserActivity extends BaseActivity implements UserListener {
         preferenceManager = new PreferenceManager(getApplicationContext());
 
         setListeners();
-        getUsers();
+        getFriends();
     }
 
-    private void setListeners(){
+    private void setListeners() {
         binding.imageBack.setOnClickListener(v -> onBackPressed());
     }
-    private void getUsers(){
+
+    private void getFriends() {
         loading(true);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
+        String currentUserId = preferenceManager.getString(Constants.Key_USER_ID);
+
+        // First, get the current user's friend list
         database.collection(Constants.Key_COLLECTION_USER)
+                .document(currentUserId)
                 .get()
-                .addOnCompleteListener(task -> {
-                    loading(false);
-                    String currentUserId = preferenceManager.getString(Constants.Key_USER_ID);
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        List<User> users = new ArrayList<>();
-                        for (QueryDocumentSnapshot queryDocumentSnapshot : task.getResult()) {
-                            if (currentUserId.equals(queryDocumentSnapshot.getId())) {
-                                continue;
-                            }
-                            User user = new User();
-                            user.email = queryDocumentSnapshot.getString(Constants.Key_EMAIL);
-                            user.image = queryDocumentSnapshot.getString(Constants.Key_IMAGE);
-                            user.token = queryDocumentSnapshot.getString(Constants.Key_FCM_TOKEN);
-                            user.name = queryDocumentSnapshot.getString(Constants.Key_NAME);
-                            user.id =queryDocumentSnapshot.getId();
-                            users.add(user);
-                        }
-                        if (users.size() > 0) {
-                            UserAdapter userAdapter = new UserAdapter(users, this);
-                            binding.userRecyclerview.setAdapter(userAdapter);
-                            binding.userRecyclerview.setVisibility(View.VISIBLE);
-                            binding.textErrorMessage.setVisibility(View.GONE);
-                        } else {
-                            showErrorMessage("No users available");
-                        }
+                .addOnSuccessListener(documentSnapshot -> {
+                    List<String> friendIds = (List<String>) documentSnapshot.get(Constants.Key_FRIENDS);
+                    if (friendIds != null && !friendIds.isEmpty()) {
+                        loadFriendsData(friendIds);
                     } else {
-                        if (task.getException() != null) {
-                            Log.e(TAG, "Error fetching users: ", task.getException());
-                        }
-                        showErrorMessage("Failed to fetch users");
+                        loading(false);
+                        showErrorMessage("No friends available");
                     }
+                })
+                .addOnFailureListener(e -> {
+                    loading(false);
+                    showErrorMessage("Failed to fetch friends");
+                    Log.e(TAG, "Error getting friends: ", e);
                 });
     }
-    private void showErrorMessage(String message){
+
+    private void loadFriendsData(List<String> friendIds) {
+        FirebaseFirestore database = FirebaseFirestore.getInstance();
+        List<User> users = new ArrayList<>();
+
+        for (String friendId : friendIds) {
+            database.collection(Constants.Key_COLLECTION_USER)
+                    .document(friendId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        User user = new User();
+                        user.email = documentSnapshot.getString(Constants.Key_EMAIL);
+                        user.image = documentSnapshot.getString(Constants.Key_IMAGE);
+                        user.token = documentSnapshot.getString(Constants.Key_FCM_TOKEN);
+                        user.name = documentSnapshot.getString(Constants.Key_NAME);
+                        user.id = documentSnapshot.getId();
+                        users.add(user);
+
+                        // Check if we've loaded all friends
+                        if (users.size() == friendIds.size()) {
+                            loading(false);
+                            if (users.size() > 0) {
+                                UserAdapter userAdapter = new UserAdapter(users, this);
+                                binding.userRecyclerview.setAdapter(userAdapter);
+                                binding.userRecyclerview.setVisibility(View.VISIBLE);
+                                binding.textErrorMessage.setVisibility(View.GONE);
+                            } else {
+                                showErrorMessage("No friends available");
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        loading(false);
+                        Log.e(TAG, "Error loading friend data: ", e);
+                    });
+        }
+    }
+
+    private void showErrorMessage(String message) {
         binding.textErrorMessage.setText(message);
         binding.textErrorMessage.setVisibility(View.VISIBLE);
         binding.userRecyclerview.setVisibility(View.GONE);
     }
-    private void loading(boolean isLoading){
-        if(isLoading){
+
+    private void loading(boolean isLoading) {
+        if (isLoading) {
             binding.progressBar.setVisibility(View.VISIBLE);
         } else {
             binding.progressBar.setVisibility(View.INVISIBLE);
         }
     }
+
     @Override
     public void onUserClicked(User user) {
         Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
-        intent.putExtra(Constants.Key_USER,user);
+        intent.putExtra(Constants.Key_USER, user);
         startActivity(intent);
         finish();
     }
 }
+
