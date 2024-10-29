@@ -16,6 +16,10 @@ import com.example.myapplication.activities.home.MainActivity;
 import com.example.myapplication.databinding.ActivityChangePasswordBinding;
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.PreferenceManager;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -25,11 +29,12 @@ import java.util.HashMap;
 
 public class ChangePasswordActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
-
+    private static final int MIN_PASSWORD_LENGTH = 6;
     private ActivityChangePasswordBinding binding;
     private PreferenceManager preferenceManager;
     private FirebaseFirestore database;
     private String currentUserId;
+    private FirebaseAuth firebaseAuth;
     private String currentUserPassword;
 
     @Override
@@ -40,6 +45,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
         preferenceManager = new PreferenceManager(getApplicationContext());
         database = FirebaseFirestore.getInstance();
+        firebaseAuth = FirebaseAuth.getInstance();
         currentUserId = preferenceManager.getString(Constants.Key_USER_ID);
 
         getUserDetails();
@@ -78,36 +84,43 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 showToast("Nhập mật khẩu");
                 return;
             }
-
+            if (newPassword.length() < MIN_PASSWORD_LENGTH) {
+                showToast("Mật khẩu mới phải có ít nhất " + MIN_PASSWORD_LENGTH + " ký tự");
+                return;
+            }
             if (!newPassword.equals(confirmNewPassword)) {
                 showToast("Mật khẩu xác nhận và mật khẩu mới không khớp");
                 return;
             }
 
-            if (!password.equals(currentUserPassword)) {
-                showToast("Mật khẩu cũ không đúng");
-                return;
-            }
 
-            updatePassword(newPassword);
+            changePassword(password, newPassword);
         });
     }
 
-    private void updatePassword(String newPassword) {
-        HashMap<String, Object> user = new HashMap<>();
-        user.put(Constants.Key_PASSWORD, newPassword);
-        database.collection(Constants.Key_COLLECTION_USER)
-                .document(currentUserId)
-                .update(user)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        showToast("Cập Nhật Mật Khẩu Thành Công");
-                        finish();
-                    } else {
-                        showToast("Cập Nhật Mật Khẩu Thất Bại");
-                    }
-                });
+    private void changePassword(String oldPassword, String newPassword) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null && user.getEmail() != null) {
+            AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), oldPassword);
+            user.reauthenticate(credential)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            user.updatePassword(newPassword)
+                                    .addOnCompleteListener(task1 -> {
+                                        if (task1.isSuccessful()) {
+                                            showToast("Cập Nhật Mật Khẩu Thành Công");
+                                            finish();
+                                        } else {
+                                            showToast("Cập Nhật Mật Khẩu Thất Bại: " + task1.getException().getMessage());
+                                        }
+                                    });
+                        } else {
+                            showToast("Mật khẩu cũ không đúng");
+                        }
+                    });
+        }
     }
+
 
     private void setupChangeProfileImageClickListener() {
         binding.buttonChangeProfileImage.setOnClickListener(v -> openImagePicker());

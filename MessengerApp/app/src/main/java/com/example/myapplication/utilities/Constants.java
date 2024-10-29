@@ -10,6 +10,11 @@ public class Constants
     public static final String Key_IS_SIGNED_IN="isSignedIn";
     public static final String Key_USER_ID="userId";
     public static final String Key_IMAGE="image";
+    // Friend related constants
+    public static final String Key_FRIENDS = "friends";
+    public static final String Key_FRIEND_REQUESTS = "friendRequests";
+    public static final String Key_SENT_FRIEND_REQUESTS = "sentFriendRequests";
+    public static final String Key_FRIEND_REQUEST_TIMESTAMPS = "friendRequestTimestamps";
     public static final String Key_FCM_TOKEN="fcmToken";
     public static final String Key_USER="user";
     public static final String Key_COLLECTION_CHAT="chat";
