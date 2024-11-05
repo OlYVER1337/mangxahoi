@@ -6,7 +6,7 @@ import { MdOutlineClose } from "react-icons/md";
 
 import Button from "./Button";
 import { useSession } from "next-auth/react";
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, updateDoc, doc } from "firebase/firestore";
 import { db, storage } from "../firebase";
 import { getDownloadURL, ref, uploadString } from "firebase/storage";
 
@@ -34,22 +34,22 @@ const WhatsOnYourMind = () => {
     setLoading(true);
 
     const docRef = await addDoc(collection(db, "posts"), {
-      id: session.user.uid,
-      username: session.user.name,
-      userImg: session.user.image,
-      text: input,
-      timestamp: serverTimestamp(),
-      likes: [],
+      userId: session.user.uid,
+      userName: session.user.name,
+      userImage: session.user.image,
+      content: input,
+      postTimestamp: serverTimestamp(),
+      likedBy: [],
       comments: [],
     });
 
-    const imageRef = ref(storage, `posts/${docRef.id}/image`);
+    const imageRef = ref(storage, `posts/${docRef.id}/Image`);
 
     if (selectedFile) {
       await uploadString(imageRef, selectedFile, "data_url").then(async () => {
         const downloadURL = await getDownloadURL(imageRef);
         await updateDoc(doc(db, "posts", docRef.id), {
-          image: downloadURL,
+          postImage: downloadURL,
         });
       });
     }
@@ -112,7 +112,7 @@ const WhatsOnYourMind = () => {
             type="file"
             name="filePicker"
             id="filePicker"
-            accept="image/*"
+            accept="Image/*"
             onChange={addImageToPost}
             ref={fPicker}
             hidden

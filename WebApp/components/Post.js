@@ -9,29 +9,29 @@ import { useSession } from "next-auth/react";
 import { deleteDoc, doc, updateDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 
-const Post = ({ data, id }) => {
+  const Post = ({ data, id }) => {
   const { data: session } = useSession();
-  const [likes, setLikes] = useState(data.likes || []);
-  const [hasLiked, setHasLiked] = useState(false);
+  const [likeBy, setLikeBy] = useState(data.likedBy || []);
+  const [hasLikedby, setHasLikedby] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [showCommentInput, setShowCommentInput] = useState(false);
 
   useEffect(() => {
-    setHasLiked(likes.includes(session.user.uid));
-  }, [likes]);
+    setHasLikedby(likeBy.includes(session.user.uid));
+  }, [likeBy]);
 
   const handleLike = async () => {
-    if (hasLiked) {
+    if (hasLikedby) {
       await updateDoc(doc(db, "posts", id), {
-        likes: arrayRemove(session.user.uid),
+        likedBy: arrayRemove(session.user.uid),
       });
-      setLikes(likes.filter((uid) => uid !== session.user.uid));
+      setLikes(likeBy.filter((uid) => uid !== session.user.uid));
     } else {
       await updateDoc(doc(db, "posts", id), {
-        likes: arrayUnion(session.user.uid),
+        likedBy: arrayUnion(session.user.uid),
       });
-      setLikes([...likes, session.user.uid]);
+      setLikeBy([...likeBy, session.user.uid]);
     }
   };
 
@@ -43,10 +43,12 @@ const Post = ({ data, id }) => {
   const handleComment = async () => {
     if (commentInput.trim()) {
       const newComment = {
-        text: commentInput,
-        username: session.user.name,
-        userImg: session.user.image,
+        content: commentInput,
+        imageUrl: null,
         timestamp: serverTimestamp(),
+        userId: session.user.uid,
+        userImage: session.user.image,
+        userName: session.user.name,
       };
       const docRef = await addDoc(collection(db, "posts", id, "comments"), newComment);
       setComments([...comments, { id: docRef.id, ...newComment }]);
@@ -93,13 +95,13 @@ const Post = ({ data, id }) => {
         <div className="flex gap-2">
           <img
             className="w-[44px] h-[44px] object-cover rounded-full"
-            src={data.userImg}
+            src={data.userImage}
             alt="dp"
           />
           <div>
-            <h1 className="text-[16px] font-semibold">{data.username}</h1>
+            <h1 className="text-[16px] font-semibold">{data.userName}</h1>
             <div className="text-gray-500 flex items-center gap-2">
-              <p>{data.timestamp ? formatTimestamp(data.timestamp.toDate()) : 'Unknown time'}</p>
+              <p>{data.postTimestamp ? formatTimestamp(data.postTimestamp.toDate()) : 'Unknown time'}</p>
               <p>·</p>
               <FaGlobeAmericas />
             </div>
@@ -108,7 +110,7 @@ const Post = ({ data, id }) => {
 
         <div className="text-gray-500 text-[26px] flex gap-4">
           <FiMoreHorizontal className="cursor-pointer" />
-          {isAdmin(data.id, session.user.uid) && (
+          {isAdmin(data.userId, session.user.uid) && (
             <MdOutlineClose
               className="cursor-pointer"
               onClick={() => {
@@ -121,18 +123,18 @@ const Post = ({ data, id }) => {
         </div>
       </div>
 
-      <p className="px-4 mt-[15px] text-gray-800 font-normal">{data.text}</p>
+      <p className="px-4 mt-[15px] text-gray-800 font-normal">{data.content}</p>
 
       <div className="mt-[15px]">
-        {data.image && <img src={data.image} alt="post pic" />}
+        {data.postImage && <img src={data.postImage} alt="post pic" />}
       </div>
 
       <div className="mx-4 h-[1px] bg-gray-300 mt-[15px]"></div>
 
       <div className="flex mt-[7px] text-gray-500">
         <div className="flex gap-2 justify-center items-center w-[50%] py-2 rounded-[10px] hover:bg-gray-200 cursor-pointer" onClick={handleLike}>
-          <AiOutlineLike className={`text-[26px] ${hasLiked ? "text-blue-500" : ""}`} />
-          <p className="font-medium">{likes.length} Like{likes.length !== 1 ? "s" : ""}</p>
+          <AiOutlineLike className={`text-[26px] ${hasLikedby ? "text-blue-500" : ""}`} />
+          <p className="font-medium">{likeBy.length} Like{likeBy.length !== 1 ? "s" : ""}</p>
         </div>
         <div className="flex gap-2 justify-center items-center w-[50%] py-2 rounded-[10px] hover:bg-gray-200 cursor-pointer" onClick={toggleComments}>
           <TfiComment className="text-[20px] translate-y-[4px]" />
@@ -143,11 +145,11 @@ const Post = ({ data, id }) => {
       {showCommentInput && (
         <div>
           {comments.map((comment) => (
-            <div key={comment.id} className="flex gap-2 mt-2">
-              <img src={comment.userImg} alt="user" className="w-8 h-8 rounded-full" />
+            <div key={comment.userId} className="flex gap-2 mt-2">
+              <img src={comment.userImage} alt="user" className="w-8 h-8 rounded-full" />
               <div>
-                <p className="font-semibold">{comment.username}</p>
-                <p>{comment.text}</p>
+                <p className="font-semibold">{comment.userName}</p>
+                <p>{comment.content}</p>
               </div>
             </div>
           ))}
