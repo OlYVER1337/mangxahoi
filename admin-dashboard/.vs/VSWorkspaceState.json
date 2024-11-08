@@ -3,8 +3,11 @@
     "",
     "\\src",
     "\\src\\api",
-    "\\src\\components"
+    "\\src\\assets",
+    "\\src\\components",
+    "\\src\\dashboard",
+    "\\src\\shared-theme"
   ],
-  "SelectedNode": "\\src\\components\\Userlist.js",
+  "SelectedNode": "\\src\\App.js",
   "PreviewInSolutionExplorer": false
 }

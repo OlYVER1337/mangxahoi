@@ -1,14 +1,24 @@
 ﻿import React from 'react';
-import { Container } from '@mui/material';
-import UserList from './components/UserList'; // Đường dẫn đến UserList
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SignIn from './SignIn'; // Import trang đăng nhập
+import AdminDashboard from './AdminDashboard'; // Import trang Dashboard của Admin
+import UserManagement from './components/UserManagement'; // Import trang Quản lý người dùng
 
-const App = () => {
+function App() {
     return (
-        <Container>
-            <h1>Quản lý Người Dùng</h1>
-            <UserList />
-        </Container>
+        <Router>
+            <Routes>
+                {/* Route cho trang đăng nhập */}
+                <Route path="/" element={<SignIn />} />
+
+                {/* Route cho trang Dashboard (admin-only) */}
+                <Route path="/dashboard" element={<AdminDashboard />} />
+
+                {/* Route cho trang Quản lý người dùng */}
+                <Route path="/user-management" element={<UserManagement />} />
+            </Routes>
+        </Router>
     );
-};
+}
 
 export default App;
