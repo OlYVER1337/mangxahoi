@@ -1,13 +1,10 @@
 {
   "ExpandedNodes": [
     "",
+    "\\config",
     "\\src",
-    "\\src\\api",
-    "\\src\\assets",
-    "\\src\\components",
-    "\\src\\dashboard",
-    "\\src\\shared-theme"
+    "\\src\\api"
   ],
-  "SelectedNode": "\\src\\App.js",
+  "SelectedNode": "\\src\\api\\userApi.js",
   "PreviewInSolutionExplorer": false
 }

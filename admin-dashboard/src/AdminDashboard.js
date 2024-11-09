@@ -1,5 +1,4 @@
-﻿// src/AdminDashboard.js
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from './firebaseConfig';
 import { collection, getDocs } from 'firebase/firestore';
@@ -25,14 +24,12 @@ export default function AdminDashboard() {
 
     // Hàm điều hướng sang trang quản lý người dùng
     const handleNavigateToUserManagement = () => {
-        navigate('/user-management'); // Đảm bảo đã cấu hình đường dẫn này trong file routes
+        navigate('/user-management'); // Điều hướng đến trang quản lý người dùng
     };
 
     return (
         <Box sx={{ padding: 4 }}>
-            <Typography variant="h4" gutterBottom>
-                Admin Dashboard
-            </Typography>
+            <Typography variant="h4" gutterBottom>Admin Dashboard</Typography>
             <Box
                 sx={{
                     display: 'flex',

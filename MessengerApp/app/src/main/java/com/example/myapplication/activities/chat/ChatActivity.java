@@ -113,7 +113,7 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
 
     private void init() {
         chatMessages = new ArrayList<>();
-        // Ensure receiverUser is not null before getting bitmap
+
         if (receiverUser != null && receiverUser.image != null) {
             chatAdapter = new ChatAdapter(this, chatMessages, getBitmapFromEncodedString(receiverUser.image), preferenceManager.getString(Constants.Key_USER_ID), this);
         } else {
