@@ -1,11 +1,7 @@
-﻿import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
-import './index.css'; // Đảm bảo rằng đường dẫn này là chính xác
+﻿const admin = require("firebase-admin");
+const serviceAccount = require("./path/to/serviceAccountKey.json"); // Đường dẫn đến tệp JSON
 
-ReactDOM.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>,
-    document.getElementById('root')
-);
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://<your-database-name>.firebaseio.com" // Thay <your-database-name> bằng tên cơ sở dữ liệu của bạn
+});
