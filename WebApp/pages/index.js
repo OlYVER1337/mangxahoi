@@ -5,7 +5,6 @@ import LeftSidebar from "../components/LeftSidebar";
 import RightSidebar from "../components/RightSidebar";
 import Feed from "../components/Feed";
 import { getSession, useSession } from "next-auth/react";
-import PostList from "../components/Postlist";
 
 export default function Home() {
   const { data: session } = useSession();
