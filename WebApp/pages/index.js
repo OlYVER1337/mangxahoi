@@ -1,4 +1,4 @@
-import Head from "next/head";
+﻿import Head from "next/head";
 import Login from "../components/Login";
 import Navbar from "../components/Navbar";
 import LeftSidebar from "../components/LeftSidebar";

@@ -6,6 +6,6 @@
     "\\pages\\api",
     "\\pages\\api\\auth"
   ],
-  "SelectedNode": "\\.env",
+  "SelectedNode": "\\server.js",
   "PreviewInSolutionExplorer": false
 }

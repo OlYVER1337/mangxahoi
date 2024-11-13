@@ -1,24 +1,31 @@
 ﻿const express = require('express');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
-const cors = require('cors'); // Import cors module
+const cors = require('cors');
+const multer = require('multer');
+const fs = require('fs');
+const { Storage } = require('@google-cloud/storage'); // Import Storage
+const projectId = 'easychat-7788b';
 
 // Cấu hình Firebase Admin SDK
-const serviceAccount = require('./serviceAccountKey.json'); // Đảm bảo thay đổi đường dẫn chính xác
+const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: 'easychat-7788b',  // Thay thế bằng project ID của bạn
+    projectId: 'easychat-7788b',
 });
 
 const db = admin.firestore();
-const app = express();
-const PORT = 5000;
+const storage = new Storage();
+const bucket = storage.bucket('easychat-7788b.appspot.com');
 
-// Middleware để phân tích JSON và CORS
-app.use(cors()); // Sử dụng CORS cho phép tất cả các yêu cầu từ mọi nguồn
+const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
-// Các route khác
+// Tạo multer để xử lý ảnh tải lên
+const upload = multer({ dest: 'uploads/' });
+
+// API lấy danh sách bài viết
 app.get('/api/posts', async (req, res) => {
     try {
         const snapshot = await db.collection('posts').orderBy('createdAt', 'desc').get();
@@ -29,59 +36,57 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// Đăng ký người dùng
-app.post('/api/register', async (req, res) => {
-    const { username, email, password } = req.body;
+app.post('/api/signup', async (req, res) => {
+    const { email, password, name } = req.body;
+
+    // Kiểm tra các giá trị nhận được
+    if (!email || !password || !name) {
+        return res.status(400).json({ message: 'Vui lòng điền đầy đủ thông tin' });
+    }
 
     try {
-        // Kiểm tra xem người dùng đã tồn tại chưa
-        const userRef = db.collection('users').doc(email);
-        const doc = await userRef.get();
-        if (doc.exists) {
-            return res.status(400).json({ message: 'User already exists!' });
-        }
-
-        // Nếu chưa có người dùng, tạo mới
-        await userRef.set({
-            username,
+        // Tạo người dùng trong Firestore
+        const userRef = admin.firestore().collection('users').doc(email);
+        const userData = {
             email,
-            password,
-        });
+            password,  // Cần mã hóa mật khẩu trước khi lưu vào Firestore
+            name,
+        };
 
-        res.status(201).json({ message: 'User registered successfully!' });
+        await userRef.set(userData);
+        res.status(200).json({ message: 'Đăng ký thành công' });
     } catch (error) {
-        res.status(500).json({ error: 'Error registering user', details: error });
+        console.error('Lỗi khi đăng ký:', error);
+        res.status(500).json({ message: 'Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại' });
     }
 });
 
+// API đăng nhập người dùng
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Truy vấn tất cả người dùng trong Firestore mà có email khớp với giá trị từ client
-        const usersCollection = db.collection('users');
-        const snapshot = await usersCollection.where('email', '==', email).get();
+        const snapshot = await db.collection('users').where('email', '==', email).get();
 
         if (snapshot.empty) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Lấy thông tin người dùng từ snapshot (có thể có duy nhất 1 user với email này)
-        const user = snapshot.docs[0].data(); // Lấy thông tin người dùng
-        const userId = snapshot.docs[0].id; // Document ID của người dùng
+        const user = snapshot.docs[0].data();
+        const userId = snapshot.docs[0].id;
 
         // Kiểm tra mật khẩu
         if (user.password !== password) {
             return res.status(401).json({ message: 'Incorrect password' });
         }
 
-        // Đăng nhập thành công, trả về thông tin người dùng
         res.status(200).json({
             message: 'Login successful',
             user: {
                 id: userId,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                image: user.image
             }
         });
     } catch (error) {
@@ -89,11 +94,5 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-
-
-
-
 // Bắt đầu server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+app.listen(5000, () => console.log("Server started on port 5000"));

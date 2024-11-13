@@ -1,15 +1,15 @@
 package com.example.myapplication.network;
 
-import java.util.HashMap;
+import com.example.myapplication.models.SignUpRequest;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
 
 public interface ApiService {
-    @POST("send")
-    Call<String> sendMessage(
-            @HeaderMap HashMap<String,String> headers,@Body String messageBody
-            );
+
+    // Ví dụ POST request để đăng ký tài khoản mới
+    @POST("signup")  // Thay thế "signup" bằng endpoint của API
+    Call<SignUpRequest> signUp(@Body SignUpRequest.SignUpRequest signUpRequest);
+
 }
