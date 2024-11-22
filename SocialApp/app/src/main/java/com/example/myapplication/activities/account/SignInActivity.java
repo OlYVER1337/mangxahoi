@@ -233,15 +233,14 @@ public class SignInActivity extends AppCompatActivity {
                             preferenceManager.putString(Constants.KEY_EMAIL, documentSnapshot.getString(Constants.KEY_EMAIL));
                             navigateToMainActivity();
                         } else {
-                            String photoUrl = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
-                            String encodedImage = photoUrl != null ?
-                                    ImageUtil.encodeImageToBase64(photoUrl) :
-                                    ImageUtil.encodeImageToBase64(String.valueOf(R.drawable.default_user_image));
+                            String photoUrl = user.getPhotoUrl() != null ?
+                                    user.getPhotoUrl().toString() :
+                                    "https://firebasestorage.googleapis.com/default_user_image.jpg"; // URL ảnh mặc định
 
                             HashMap<String, Object> userMap = new HashMap<>();
                             userMap.put(Constants.KEY_NAME, user.getDisplayName());
                             userMap.put(Constants.KEY_EMAIL, user.getEmail());
-                            userMap.put(Constants.KEY_IMAGE, encodedImage);
+                            userMap.put(Constants.KEY_IMAGE, photoUrl);  // Lưu trực tiếp URL;
                             userMap.put(Constants.KEY_FRIENDS, new ArrayList<String>());
                             userMap.put(Constants.KEY_FRIEND_REQUESTS, new ArrayList<String>());
                             userMap.put(Constants.KEY_SENT_FRIEND_REQUESTS, new ArrayList<String>());
@@ -253,7 +252,7 @@ public class SignInActivity extends AppCompatActivity {
                                         preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
                                         preferenceManager.putString(Constants.KEY_USER_ID, documentReference.getId());
                                         preferenceManager.putString(Constants.KEY_NAME, user.getDisplayName());
-                                        preferenceManager.putString(Constants.KEY_IMAGE, encodedImage);
+                                        preferenceManager.putString(Constants.KEY_IMAGE, photoUrl);
                                         preferenceManager.putString(Constants.KEY_EMAIL, user.getEmail());
                                         navigateToMainActivity();
                                     });

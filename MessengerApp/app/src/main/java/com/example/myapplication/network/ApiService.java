@@ -1,4 +1,4 @@
-package com.example.myapplication.network;
+/*package com.example.myapplication.network;
 
 import com.example.myapplication.models.SignUpRequest;
 
@@ -12,4 +12,4 @@ public interface ApiService {
     @POST("signup")  // Thay thế "signup" bằng endpoint của API
     Call<SignUpRequest> signUp(@Body SignUpRequest.SignUpRequest signUpRequest);
 
-}
+}*/

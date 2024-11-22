@@ -12,10 +12,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.myapplication.R;
+import com.example.myapplication.databinding.ItemFriendBinding;
 import com.example.myapplication.models.User;
+import com.bumptech.glide.Glide;
 import java.util.List;
 
-public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.ViewHolder> {
+public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.FriendViewHolder> {
 
     private List<User> friendList;
     private OnFriendActionListener listener;
@@ -31,20 +33,18 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Vi
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_friend, parent, false);
-        return new ViewHolder(view);
+    public FriendViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ItemFriendBinding binding = ItemFriendBinding.inflate(
+                LayoutInflater.from(parent.getContext()),
+                parent,
+                false
+        );
+        return new FriendViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        User user = friendList.get(position);
-        holder.textName.setText(user.getName());
-        if (user.getImage() != null) {
-            Bitmap bitmap = getUserImage(user.getImage());
-            holder.imageProfile.setImageBitmap(bitmap);
-        }
-        holder.buttonDeleteFriend.setOnClickListener(v -> listener.onDeleteFriend(user));
+    public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
+        holder.bind(friendList.get(position));
     }
 
     @Override
@@ -52,21 +52,24 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Vi
         return friendList.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textName;
-        ImageView imageProfile;
-        Button buttonDeleteFriend;
+    class FriendViewHolder extends RecyclerView.ViewHolder {
+        private ItemFriendBinding binding;
 
-        ViewHolder(View itemView) {
-            super(itemView);
-            textName = itemView.findViewById(R.id.textName);
-            imageProfile = itemView.findViewById(R.id.imageProfile);
-            buttonDeleteFriend = itemView.findViewById(R.id.buttonDeleteFriend);
+        FriendViewHolder(ItemFriendBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        void bind(User user) {
+            binding.textName.setText(user.getName());
+            if (user.getImage() != null) {
+                Glide.with(binding.imageProfile.getContext())
+                        .load(user.getImage())
+                        .circleCrop()
+                        .into(binding.imageProfile);
+            }
+            binding.buttonDeleteFriend.setOnClickListener(v -> listener.onDeleteFriend(user));
         }
     }
-
-    private Bitmap getUserImage(String encodedImage) {
-        byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-    }
 }
+

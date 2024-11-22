@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapplication.R;
 import com.example.myapplication.databinding.ActivityChangePasswordBinding;
 import com.example.myapplication.utilities.Constants;
 import com.example.myapplication.utilities.PreferenceManager;
@@ -21,6 +22,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.bumptech.glide.Glide;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +39,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
     private String currentUserId;
     private String currentUserPassword;
     private FirebaseAuth firebaseAuth;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +52,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
         database = FirebaseFirestore.getInstance();
         firebaseAuth = FirebaseAuth.getInstance();
         currentUserId = preferenceManager.getString(Constants.KEY_USER_ID);
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
 
         getUserDetails();
         setupButtonClick();
@@ -54,6 +62,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void getUserDetails() {
+        // Lấy thông tin người dùng từ Firestore
         database.collection(Constants.KEY_COLLECTION_USERS)
                 .document(currentUserId)
                 .get()
@@ -63,11 +72,16 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         binding.inputName.setText(documentSnapshot.getString(Constants.KEY_NAME));
                         binding.inputEmail.setText(documentSnapshot.getString(Constants.KEY_EMAIL));
                         currentUserPassword = documentSnapshot.getString(Constants.KEY_PASSWORD);
-                        String encodedImage = documentSnapshot.getString(Constants.KEY_IMAGE);
-                        if (encodedImage != null && !encodedImage.isEmpty()) {
-                            byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            binding.profileImageView.setImageBitmap(bitmap);
+
+                        // Hiển thị ảnh đại diện từ URL
+                        String imageUrl = documentSnapshot.getString(Constants.KEY_IMAGE);
+                        if (imageUrl != null && !imageUrl.isEmpty()) {
+                            Glide.with(this)
+                                    .load(imageUrl)
+                                    .placeholder(R.drawable.default_user_image)
+                                    .error(R.drawable.default_user_image)
+                                    .circleCrop()
+                                    .into(binding.profileImageView);
                         }
                     }
                 });
@@ -147,45 +161,50 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void uploadImageToFirebase(Bitmap bitmap) {
-        String encodedImage = encodeImageToBase64(bitmap);
-        if (encodedImage != null) {
-            // Update Firestore with the new image
-            database.collection(Constants.KEY_COLLECTION_USERS).document(currentUserId)
-                    .update(Constants.KEY_IMAGE, encodedImage)
-                    .addOnSuccessListener(unused -> {
-                        // Update SharedPreferences
-                        preferenceManager.putString(Constants.KEY_IMAGE, encodedImage);
-                        showToast("Cập nhật ảnh đại diện thành công");
+        // Tạo đường dẫn lưu trữ ảnh trên Firebase Storage
+        StorageReference imageRef = storageRef.child("profile_images/" + currentUserId + ".jpg");
 
-                        // Update all posts by this user
-                        updateUserPostsWithNewImage(encodedImage);
-                    }).addOnFailureListener(e -> showToast("Cập nhật ảnh đại diện thất bại"));
-        }
+        // Nén ảnh trước khi tải lên
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+        byte[] data = baos.toByteArray();
+
+        // Tải ảnh lên Firebase Storage
+        imageRef.putBytes(data)
+                .addOnSuccessListener(taskSnapshot -> {
+                    // Lấy URL của ảnh sau khi tải lên thành công
+                    imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String imageUrl = uri.toString();
+
+                        // Cập nhật URL ảnh trong Firestore
+                        database.collection(Constants.KEY_COLLECTION_USERS)
+                                .document(currentUserId)
+                                .update(Constants.KEY_IMAGE, imageUrl)
+                                .addOnSuccessListener(unused -> {
+                                    preferenceManager.putString(Constants.KEY_IMAGE, imageUrl);
+                                    showToast("Cập nhật ảnh đại diện thành công");
+                                    updateUserPostsWithNewImage(imageUrl);
+                                })
+                                .addOnFailureListener(e -> showToast("Cập nhật ảnh đại diện thất bại"));
+                    });
+                })
+                .addOnFailureListener(e -> showToast("Tải ảnh lên thất bại"));
     }
 
-    private void updateUserPostsWithNewImage(String newImageEncoded) {
+    private void updateUserPostsWithNewImage(String newImageUrl) {
+        // Cập nhật URL ảnh mới trong tất cả bài đăng của người dùng
         database.collection(Constants.KEY_COLLECTION_POSTS)
                 .whereEqualTo(Constants.KEY_USER_ID, currentUserId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
-                        document.getReference().update(Constants.KEY_USER_IMAGE, newImageEncoded);
+                        document.getReference().update(Constants.KEY_USER_IMAGE, newImageUrl);
                     }
                     showToast("Cập nhật ảnh đại diện trong bài đăng thành công");
                 })
                 .addOnFailureListener(e -> showToast("Không thể cập nhật ảnh đại diện trong bài đăng"));
     }
 
-
-    private String encodeImageToBase64(Bitmap bitmap) {
-        int previewWidth = 150;
-        int previewHeight = bitmap.getHeight() * previewWidth / bitmap.getWidth();
-        Bitmap previewBitmap = Bitmap.createScaledBitmap(bitmap, previewWidth, previewHeight, false);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        previewBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream.toByteArray();
-        return Base64.encodeToString(byteArray, Base64.DEFAULT);
-    }
 
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();

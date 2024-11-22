@@ -22,6 +22,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,11 +67,9 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         binding.inputName.setText(documentSnapshot.getString(Constants.Key_NAME));
                         binding.inputEmail.setText(documentSnapshot.getString(Constants.Key_EMAIL));
                         currentUserPassword = documentSnapshot.getString(Constants.Key_PASSWORD);
-                        String encodedImage = documentSnapshot.getString(Constants.Key_IMAGE);
-                        if (encodedImage != null && !encodedImage.isEmpty()) {
-                            byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            binding.profileImageView.setImageBitmap(bitmap);
+                        String imageUrl = documentSnapshot.getString(Constants.Key_IMAGE);
+                        if (imageUrl != null && !imageUrl.isEmpty()) {
+                            Picasso.get().load(imageUrl).into(binding.profileImageView);
                         }
                     }
                 });
@@ -136,28 +137,32 @@ public class ChangePasswordActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             Uri imageUri = data.getData();
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-                binding.profileImageView.setImageBitmap(bitmap);
-                uploadImageToFirebase(bitmap);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // Hiển thị ảnh preview
+            Picasso.get().load(imageUri).into(binding.profileImageView);
+            // Upload ảnh lên Firebase
+            uploadImageToFirebase(imageUri);
         }
     }
 
-    private void uploadImageToFirebase(Bitmap bitmap) {
-        String encodedImage = encodeImage(bitmap); // Sử dụng hàm encodeImage đã cho
-        if (encodedImage != null) {
-            // Update Firestore with the new image
-            database.collection(Constants.Key_COLLECTION_USER).document(currentUserId)
-                    .update(Constants.Key_IMAGE, encodedImage)
-                    .addOnSuccessListener(unused -> {
-                        // Update SharedPreferences
-                        preferenceManager.putString(Constants.Key_IMAGE, encodedImage);
-                        showToast("Cập nhật ảnh đại diện thành công");
-                    }).addOnFailureListener(e -> showToast("Cập nhật ảnh đại diện thất bại"));
-        }
+    private void uploadImageToFirebase(Uri imageUri) {
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                .child("profile_images/" + currentUserId + ".jpg");
+
+        storageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String imageUrl = uri.toString();
+                        database.collection(Constants.Key_COLLECTION_USER)
+                                .document(currentUserId)
+                                .update(Constants.Key_IMAGE, imageUrl)
+                                .addOnSuccessListener(unused -> {
+                                    preferenceManager.putString(Constants.Key_IMAGE, imageUrl);
+                                    showToast("Cập nhật ảnh đại diện thành công");
+                                })
+                                .addOnFailureListener(e -> showToast("Cập nhật ảnh đại diện thất bại"));
+                    });
+                })
+                .addOnFailureListener(e -> showToast("Tải ảnh lên thất bại"));
     }
 
     private String encodeImage(Bitmap bitmap) {

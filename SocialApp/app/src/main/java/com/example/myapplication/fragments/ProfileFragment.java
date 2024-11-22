@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.bumptech.glide.Glide;
 
 import java.util.HashMap;
 
@@ -56,35 +57,40 @@ public class ProfileFragment extends Fragment {
     }
 
     private void updateUserInfo() {
+        // Lấy thông tin người dùng từ Firestore và cập nhật giao diện
         String userId = preferenceManager.getString(Constants.KEY_USER_ID);
         FirebaseFirestore.getInstance().collection(Constants.KEY_COLLECTION_USERS)
                 .document(userId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        String imageEncoded = documentSnapshot.getString(Constants.KEY_IMAGE);
-                        if (imageEncoded != null) {
-                            byte[] bytes = Base64.decode(imageEncoded, Base64.DEFAULT);
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            binding.imageProfile.setImageBitmap(bitmap);
+                        String imageUrl = documentSnapshot.getString(Constants.KEY_IMAGE);
+                        if (imageUrl != null && !imageUrl.isEmpty()) {
+                            // Dùng Glide để hiển thị ảnh đại diện dạng tròn
+                            Glide.with(this)
+                                    .load(imageUrl)
+                                    .circleCrop()
+                                    .into(binding.imageProfile);
                         }
                     }
                 });
     }
 
     private void setUserInfo() {
+        // Hiển thị tên người dùng
         String name = preferenceManager.getString(Constants.KEY_NAME);
         if (name != null) {
             binding.textName.setText(name);
         }
 
-        String imageString = preferenceManager.getString(Constants.KEY_IMAGE);
-        if (imageString != null) {
-            byte[] bytes = Base64.decode(imageString, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            binding.imageProfile.setImageBitmap(bitmap);
+        // Hiển thị ảnh đại diện từ URL
+        String imageUrl = preferenceManager.getString(Constants.KEY_IMAGE);
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(imageUrl)
+                    .circleCrop()
+                    .into(binding.imageProfile);
         }
-
     }
 
     private void setListeners() {

@@ -16,6 +16,7 @@ import com.example.myapplication.activities.post.ImageViewActivity;
 import com.example.myapplication.databinding.ItemPostBinding;
 import com.example.myapplication.models.Post;
 import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -80,15 +81,19 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             binding.textPostContent.setText(post.getContent());
             binding.textLikeCount.setText(String.valueOf(post.getLikes()));
 
-            if (post.getUserImage() != null) {
-                byte[] decodedString = Base64.decode(post.getUserImage(), Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                binding.imageProfile.setImageBitmap(decodedByte);
+            if (post.getUserImage() != null && !post.getUserImage().isEmpty()) {
+                Glide.with(binding.imageProfile.getContext())
+                        .load(post.getUserImage())
+                        .circleCrop()
+                        .into(binding.imageProfile);
             }
 
             if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
                 binding.imagePostContent.setVisibility(View.VISIBLE);
-                Picasso.get().load(post.getImageUrl()).into(binding.imagePostContent);
+                Glide.with(binding.imagePostContent.getContext())
+                        .load(post.getImageUrl())
+                        .into(binding.imagePostContent);
+
                 binding.imagePostContent.setOnClickListener(v -> {
                     Intent intent = new Intent(v.getContext(), ImageViewActivity.class);
                     intent.putExtra("imageUrl", post.getImageUrl());

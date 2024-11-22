@@ -9,6 +9,8 @@ import android.util.Base64;
 import android.view.View;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.example.myapplication.R;
 import com.example.myapplication.activities.account.ChangePasswordActivity;
 import com.example.myapplication.activities.account.SignInActivity;
 import com.example.myapplication.activities.chat.ChatActivity;
@@ -26,6 +28,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -77,11 +80,16 @@ public class MainActivity extends BaseActivity implements ConversionListener {
 
     private void loadUserDetail() {
         binding.textName.setText(preferenceManager.getString(Constants.Key_NAME));
-        byte[] bytes = Base64.decode(preferenceManager.getString(Constants.Key_IMAGE), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        binding.imageProfile.setImageBitmap(bitmap);
+        String imageUrl = preferenceManager.getString(Constants.Key_IMAGE);
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(binding.imageProfile.getContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.default_user_image)
+                    .error(R.drawable.default_user_image)
+                    .circleCrop()
+                    .into(binding.imageProfile);
+        }
     }
-
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }

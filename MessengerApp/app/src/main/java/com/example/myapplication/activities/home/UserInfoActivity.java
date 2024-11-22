@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.databinding.ActivityUserInfoBinding;
 import com.example.myapplication.utilities.PreferenceManager;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,7 +47,7 @@ public class UserInfoActivity extends AppCompatActivity  {
 
     private void loadUserInfo() {
         String name = getIntent().getStringExtra(Constants.Key_RECEIVER_NAME);
-        String image = getIntent().getStringExtra(Constants.Key_RECEIVER_IMAGE);
+        String imageUrl = getIntent().getStringExtra(Constants.Key_RECEIVER_IMAGE);
         String userId = getIntent().getStringExtra(Constants.Key_RECEIVER_ID);
 
         SharedPreferences prefs = getSharedPreferences("user_info", MODE_PRIVATE);
@@ -54,22 +55,16 @@ public class UserInfoActivity extends AppCompatActivity  {
 
         try {
             JSONObject nicknames = new JSONObject(nicknamesJson);
-            String uniqueKey = preferenceManager.getString(Constants.Key_EMAIL)+"_"+userId ; ;
+            String uniqueKey = preferenceManager.getString(Constants.Key_EMAIL)+"_"+userId;
             String nickname = nicknames.optString(uniqueKey, name);
 
-            if (nickname.isEmpty()){
-                binding.nameTextView.setText(name);
-            }else {
-                binding.nameTextView.setText(nickname);
+            binding.nameTextView.setText(nickname.isEmpty() ? name : nickname);
+
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                Picasso.get().load(imageUrl).into(binding.profileImageView);
             }
         } catch (JSONException e) {
             e.printStackTrace();
-        }
-
-        if (image != null && !image.isEmpty()) {
-            byte[] bytes = Base64.decode(image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            binding.profileImageView.setImageBitmap(bitmap);
         }
     }
 

@@ -348,11 +348,6 @@ public class FriendFragment extends Fragment implements FriendRequestAdapter.OnF
 
 
 
-
-
-
-
-
     @Override
     public void onAccept(User user) {
         if (user == null || user.getId() == null) {

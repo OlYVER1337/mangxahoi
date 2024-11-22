@@ -15,6 +15,7 @@ import com.example.myapplication.activities.post.ImageViewActivity;
 import com.example.myapplication.databinding.ItemCommentBinding;
 import com.example.myapplication.models.Comment;
 import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -65,14 +66,18 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             binding.textTimestamp.setText(comment.getFormattedDate());
 
             if (comment.getUserImage() != null && !comment.getUserImage().isEmpty()) {
-                byte[] decodedString = Base64.decode(comment.getUserImage(), Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                binding.imageProfile.setImageBitmap(decodedByte);
+                Glide.with(binding.imageProfile.getContext())
+                        .load(comment.getUserImage())
+                        .circleCrop()
+                        .into(binding.imageProfile);
             }
 
             if (comment.getImageUrl() != null && !comment.getImageUrl().isEmpty()) {
                 binding.imageCommentContent.setVisibility(View.VISIBLE);
-                Picasso.get().load(comment.getImageUrl()).into(binding.imageCommentContent);
+                Glide.with(binding.imageCommentContent.getContext())
+                        .load(comment.getImageUrl())
+                        .into(binding.imageCommentContent);
+
                 binding.imageCommentContent.setOnClickListener(v -> {
                     Intent intent = new Intent(v.getContext(), ImageViewActivity.class);
                     intent.putExtra("imageUrl", comment.getImageUrl());

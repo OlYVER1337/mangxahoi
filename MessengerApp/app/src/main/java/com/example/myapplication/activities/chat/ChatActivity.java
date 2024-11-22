@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.activities.home.BaseActivity;
 import com.example.myapplication.activities.home.UserInfoActivity;
@@ -113,11 +114,12 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
 
     private void init() {
         chatMessages = new ArrayList<>();
+        receiverUser = (User) getIntent().getSerializableExtra(Constants.Key_USER);
 
-        if (receiverUser != null && receiverUser.image != null) {
-            chatAdapter = new ChatAdapter(this, chatMessages, getBitmapFromEncodedString(receiverUser.image), preferenceManager.getString(Constants.Key_USER_ID), this);
+        if (receiverUser != null && receiverUser.image != null && !receiverUser.image.isEmpty()) {
+            chatAdapter = new ChatAdapter(this, chatMessages, receiverUser.image, preferenceManager.getString(Constants.Key_USER_ID),this);
         } else {
-            chatAdapter = new ChatAdapter(this, chatMessages, BitmapFactory.decodeResource(getResources(), R.drawable.default_user_image), preferenceManager.getString(Constants.Key_USER_ID), this);
+            chatAdapter = new ChatAdapter(this, chatMessages, "android.resource://" + getPackageName() + "/" + R.drawable.default_user_image, preferenceManager.getString(Constants.Key_USER_ID), this);
         }
         binding.chatRecyclerView.setAdapter(chatAdapter);
         database = FirebaseFirestore.getInstance();
@@ -205,7 +207,12 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                         if (newImage != null && !newImage.equals(receiverUser.image)) {
                             receiverUser.image = newImage;
                             // Cập nhật ảnh đại diện
-                            binding.imageProfile.setImageBitmap(getBitmapFromEncodedString(newImage));
+                            Glide.with(binding.imageProfile.getContext())
+                                    .load(newImage)
+                                    .placeholder(R.drawable.default_user_image)
+                                    .error(R.drawable.default_user_image)
+                                    .circleCrop()
+                                    .into(binding.imageProfile);
                         }
                     }
                     binding.textAvailability.setVisibility(isReceiverAvailable ? View.VISIBLE : View.GONE);
@@ -223,22 +230,14 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
                 .addSnapshotListener(eventListener);
     }
 
-    private Bitmap getBitmapFromEncodedString(String encodedImage) {
-        if (encodedImage == null || encodedImage.isEmpty()) {
-            return BitmapFactory.decodeResource(getResources(), R.drawable.default_user_image); // Đặt ảnh mặc định
-        }
-        try {
-            byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        } catch (IllegalArgumentException e) {
-            Log.e("ChatActivity", "Base64 decode failed: " + e.getMessage());
-            return BitmapFactory.decodeResource(getResources(), R.drawable.default_user_image); // Đặt ảnh mặc định
-        }
-    }
-
     private void loadReceiverDetail() {
         receiverUser = (User) getIntent().getSerializableExtra(Constants.Key_USER);
-        binding.imageProfile.setImageBitmap(getBitmapFromEncodedString(receiverUser.image));
+        Glide.with(binding.imageProfile.getContext())
+                .load(receiverUser.image)
+                .placeholder(R.drawable.default_user_image)
+                .error(R.drawable.default_user_image)
+                .circleCrop()
+                .into(binding.imageProfile);
         binding.textName.setText(receiverUser.name);
 
         SharedPreferences prefs = getSharedPreferences("user_info", MODE_PRIVATE);
@@ -482,5 +481,3 @@ public class ChatActivity extends BaseActivity implements ChatAdapterListener {
     }
 
 }
-
-

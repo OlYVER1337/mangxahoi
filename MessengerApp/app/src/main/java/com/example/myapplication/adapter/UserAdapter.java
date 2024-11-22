@@ -9,9 +9,12 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.example.myapplication.R;
 import com.example.myapplication.databinding.ItemContainerUserBinding;
 import com.example.myapplication.listeners.UserListener;
 import com.example.myapplication.models.User;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 public class UserAdapter extends  RecyclerView.Adapter<UserAdapter.UserViewHolder>{
@@ -49,12 +52,12 @@ public class UserAdapter extends  RecyclerView.Adapter<UserAdapter.UserViewHolde
         void setUserData(User user){
             binding.textName.setText(user.name);
             binding.textEmail.setText(user.email);
-            binding.imageProfile.setImageBitmap(getUserImage(user.image));
+            Glide.with(binding.imageProfile.getContext())
+                    .load(user.image)
+                    .circleCrop()
+                    .into(binding.imageProfile);
             binding.getRoot().setOnClickListener(v -> userListener.onUserClicked(user));
         }
     }
-    private Bitmap getUserImage(String encodeImage){
-        byte[] bytes = Base64.decode(encodeImage, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(bytes,0,bytes.length);
-    }
+
 }

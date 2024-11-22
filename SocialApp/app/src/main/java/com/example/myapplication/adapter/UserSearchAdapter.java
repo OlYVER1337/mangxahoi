@@ -8,8 +8,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.myapplication.R;
 import com.example.myapplication.databinding.ItemUserSearchBinding;
 import com.example.myapplication.models.User;
+import com.bumptech.glide.Glide;
 import java.util.List;
 
 public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.UserViewHolder> {
@@ -52,9 +55,31 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Us
         }
 
         void bind(User user) {
+            String displayName = user.getName() != null ? user.getName() : "Unknown User";
+            binding.textName.setText(displayName);
+
             if (user.getImage() != null) {
-                Bitmap bitmap = getUserImage(user.getImage());
-                binding.imageProfile.setImageBitmap(bitmap);
+                if (user.getImage().startsWith("http")) {
+                    // Xử lý URL từ Firebase Storage
+                    Glide.with(binding.imageProfile.getContext())
+                            .load(user.getImage())
+                            .placeholder(R.drawable.default_user_image)
+                            .error(R.drawable.default_user_image)
+                            .circleCrop()
+                            .into(binding.imageProfile);
+                } else {
+                    // Xử lý ảnh mã hóa Base64
+                    try {
+                        byte[] bytes = Base64.decode(user.getImage(), Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        binding.imageProfile.setImageBitmap(bitmap);
+                    } catch (Exception e) {
+                        // Nếu không phải Base64 hợp lệ, hiển thị ảnh mặc định
+                        binding.imageProfile.setImageResource(R.drawable.default_user_image);
+                    }
+                }
+            } else {
+                binding.imageProfile.setImageResource(R.drawable.default_user_image);
             }
             binding.textName.setText(user.getName());
             if (user.hasPendingRequest()) {
@@ -69,10 +94,6 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Us
         }
     }
 
-    private Bitmap getUserImage(String encodedImage) {
-        byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-    }
     public interface OnUserActionListener {
         void onAddFriend(User user);
         void onCancelFriend(User user);

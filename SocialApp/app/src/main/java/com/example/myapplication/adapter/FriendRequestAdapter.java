@@ -12,10 +12,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.myapplication.R;
+import com.example.myapplication.databinding.ItemFriendRequestBinding;
 import com.example.myapplication.models.User;
+import com.bumptech.glide.Glide;
 import java.util.List;
 
-public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdapter.ViewHolder> {
+public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdapter.RequestViewHolder> {
 
     private List<User> friendRequests;
     private OnFriendRequestActionListener listener;
@@ -32,22 +34,18 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_friend_request, parent, false);
-        return new ViewHolder(view);
+    public RequestViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ItemFriendRequestBinding binding = ItemFriendRequestBinding.inflate(
+                LayoutInflater.from(parent.getContext()),
+                parent,
+                false
+        );
+        return new RequestViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        User user = friendRequests.get(position);
-        if (user.getImage() != null) {
-            Bitmap bitmap = getUserImage(user.getImage());
-            holder.imageProfile.setImageBitmap(bitmap);
-        }
-        holder.textTimestamp.setText(user.getFormattedDate());
-        holder.textName.setText(user.getName());
-        holder.buttonAccept.setOnClickListener(v -> listener.onAccept(user));
-        holder.buttonDecline.setOnClickListener(v -> listener.onDecline(user));
+    public void onBindViewHolder(@NonNull RequestViewHolder holder, int position) {
+        holder.bind(friendRequests.get(position));
     }
 
     @Override
@@ -55,24 +53,26 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
         return friendRequests.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textName;
-        TextView textTimestamp;
-        Button buttonAccept;
-        Button buttonDecline;
-        ImageView imageProfile;
+    class RequestViewHolder extends RecyclerView.ViewHolder {
+        private ItemFriendRequestBinding binding;
 
-        ViewHolder(View itemView) {
-            super(itemView);
-            imageProfile = itemView.findViewById(R.id.imageProfile);
-            textTimestamp = itemView.findViewById(R.id.textTimestamp);
-            textName = itemView.findViewById(R.id.textName);
-            buttonAccept = itemView.findViewById(R.id.buttonAccept);
-            buttonDecline = itemView.findViewById(R.id.buttonDecline);
+        RequestViewHolder(ItemFriendRequestBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        void bind(User user) {
+            if (user.getImage() != null) {
+                Glide.with(binding.imageProfile.getContext())
+                        .load(user.getImage())
+                        .circleCrop()
+                        .into(binding.imageProfile);
+            }
+            binding.textTimestamp.setText(user.getFormattedDate());
+            binding.textName.setText(user.getName());
+            binding.buttonAccept.setOnClickListener(v -> listener.onAccept(user));
+            binding.buttonDecline.setOnClickListener(v -> listener.onDecline(user));
         }
     }
-    private Bitmap getUserImage(String encodedImage) {
-        byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-    }
 }
+

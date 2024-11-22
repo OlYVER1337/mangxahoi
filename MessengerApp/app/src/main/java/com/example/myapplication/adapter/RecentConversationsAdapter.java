@@ -9,10 +9,13 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.example.myapplication.R;
 import com.example.myapplication.databinding.ItemContainerRecentConversionBinding;
 import com.example.myapplication.listeners.ConversionListener;
 import com.example.myapplication.models.ChatMessage;
 import com.example.myapplication.models.User;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -51,7 +54,11 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
         }
 
         public void setData(ChatMessage chatMessage) {
-            binding.imageProfile.setImageBitmap(getConversionImage(chatMessage.conversionImage));
+            Glide.with(binding.imageProfile.getContext())
+                    .load(chatMessage.conversionImage)
+                    .centerCrop()
+                    .circleCrop()
+                    .into(binding.imageProfile);
             binding.textName.setText(chatMessage.conversionName); // Changed from conversionId to conversionName
             binding.textRecentMessage.setText(chatMessage.message);
             binding.getRoot().setOnClickListener(v -> {
@@ -64,8 +71,4 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
         }
     }
 
-    private Bitmap getConversionImage(String encodedImage) {
-        byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-    }
 }

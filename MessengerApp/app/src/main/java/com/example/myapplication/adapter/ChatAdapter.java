@@ -3,6 +3,7 @@ package com.example.myapplication.adapter;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.listeners.ChatAdapterListener;
 import com.example.myapplication.models.ChatMessage;
@@ -22,15 +24,15 @@ import java.util.List;
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<ChatMessage> chatMessages;
-    private final Bitmap receiverProfileImage;
+    private final String receiverUserImage;
     private final Context context;
     private final String senderId;
     private final ChatAdapterListener listener;
 
-    public ChatAdapter(Context context, List<ChatMessage> chatMessages, Bitmap receiverProfileImage, String senderId, ChatAdapterListener listener) {
+    public ChatAdapter(Context context, List<ChatMessage> chatMessages, String receiverUserImage, String senderId, ChatAdapterListener listener) {
         this.context = context;
         this.chatMessages = chatMessages;
-        this.receiverProfileImage = receiverProfileImage;
+        this.receiverUserImage = receiverUserImage;
         this.senderId = senderId;
         this.listener = listener;
     }
@@ -65,7 +67,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (getItemViewType(position) == 1) {
             ((SentMessageViewHolder) holder).setData(chatMessage, listener);
         } else {
-            ((ReceivedMessageViewHolder) holder).setData(chatMessage, receiverProfileImage, listener);
+            ((ReceivedMessageViewHolder) holder).setData(chatMessage, receiverUserImage, listener);
         }
         // Thêm sự kiện nhấn giữ để xóa tin nhắn
         holder.itemView.setOnLongClickListener(v -> {
@@ -97,7 +99,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if ("media".equals(chatMessage.fileType) && chatMessage.fileUrl != null) {
                 textMessage.setVisibility(View.GONE);
                 imageMessage.setVisibility(View.VISIBLE);
-                Picasso.get().load(chatMessage.fileUrl).into(imageMessage);
+                Glide.with(imageMessage.getContext())
+                        .load(chatMessage.fileUrl)
+                        .into(imageMessage);
                 imageMessage.setOnClickListener(v -> listener.onOpenFile(chatMessage.fileUrl));
                 imageMessage.setOnLongClickListener(v -> {
                     listener.onDownloadFile(chatMessage.fileUrl);
@@ -130,11 +134,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             imageMessage = itemView.findViewById(R.id.imageMessage);
             imageProfile = itemView.findViewById(R.id.imageProfile);
         }
-        void setData(ChatMessage chatMessage, Bitmap receiverProfileImage, ChatAdapterListener listener) {
+        void setData(ChatMessage chatMessage, String receiverUserImage, ChatAdapterListener listener) {
             if ("media".equals(chatMessage.fileType) && chatMessage.fileUrl != null) {
                 textMessage.setVisibility(View.GONE);
                 imageMessage.setVisibility(View.VISIBLE);
-                Picasso.get().load(chatMessage.fileUrl).into(imageMessage);
+                Glide.with(imageMessage.getContext())
+                        .load(chatMessage.fileUrl)
+                        .into(imageMessage);
                 imageMessage.setOnClickListener(v -> listener.onOpenFile(chatMessage.fileUrl));
                 imageMessage.setOnLongClickListener(v -> {
                     listener.onDownloadFile(chatMessage.fileUrl);
@@ -154,8 +160,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 imageMessage.setVisibility(View.GONE);
                 textMessage.setText(chatMessage.message);
             }
-            if (receiverProfileImage != null) {
-                imageProfile.setImageBitmap(receiverProfileImage);
+            if (receiverUserImage != null && !receiverUserImage.isEmpty()) {
+                Glide.with(imageProfile.getContext())
+                        .load(receiverUserImage)
+                        .placeholder(R.drawable.default_user_image)
+                        .error(R.drawable.default_user_image)
+                        .circleCrop()
+                        .into(imageProfile);
+                imageProfile.setVisibility(View.VISIBLE);
+            } else {
+                imageProfile.setImageResource(R.drawable.default_user_image);
             }
         }
     }
