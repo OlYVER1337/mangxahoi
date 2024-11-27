@@ -4,8 +4,9 @@
     "\\components",
     "\\pages",
     "\\pages\\api",
-    "\\pages\\api\\auth"
+    "\\pages\\api\\auth",
+    "\\styles"
   ],
-  "SelectedNode": "\\server.js",
+  "SelectedNode": "\\pages\\messenger.js",
   "PreviewInSolutionExplorer": false
 }

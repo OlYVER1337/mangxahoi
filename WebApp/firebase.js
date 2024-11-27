@@ -1,10 +1,10 @@
-// Import the functions you need from the SDKs you need
+﻿// Import the functions you need from the SDKs you need
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,8 +18,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore();
-const storage = getStorage();
-
+const db = getFirestore(app); // Đảm bảo khởi tạo db từ app
+const storage = getStorage(app); // Đảm bảo khởi tạo storage từ app
+const auth = getAuth(app)
+const provider = new GoogleAuthProvider();
+export const signInWithEmail = signInWithEmailAndPassword;
+export const registerWithEmail = createUserWithEmailAndPassword;
+export const signInWithGoogle = signInWithPopup;
 export default app;
-export { db, storage };
+export { auth, provider, db, storage }; // Xuất db và storage để sử dụng trong các tệp khác

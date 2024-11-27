@@ -20,6 +20,7 @@ const Login = () => {
         });
 
         if (response?.ok) {
+
             router.push('/');
         } else {
             setErrorMessage('Email hoặc mật khẩu không đúng');
