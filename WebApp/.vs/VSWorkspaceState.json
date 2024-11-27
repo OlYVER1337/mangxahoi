@@ -6,6 +6,10 @@
     "\\pages\\api",
     "\\pages\\api\\auth"
   ],
+<<<<<<< Updated upstream
   "SelectedNode": "\\server.js",
+=======
+  "SelectedNode": "\\components\\Post.js",
+>>>>>>> Stashed changes
   "PreviewInSolutionExplorer": false
 }
