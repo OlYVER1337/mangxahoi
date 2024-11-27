@@ -6,10 +6,6 @@
     "\\pages\\api",
     "\\pages\\api\\auth"
   ],
-<<<<<<< Updated upstream
-  "SelectedNode": "\\server.js",
-=======
-  "SelectedNode": "\\components\\Post.js",
->>>>>>> Stashed changes
+  "SelectedNode": "\\pages\\api\\auth\\[...nextauth].js",
   "PreviewInSolutionExplorer": false
 }

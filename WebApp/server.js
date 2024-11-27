@@ -2,18 +2,16 @@
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
 const multer = require('multer');
-<<<<<<< Updated upstream
 const fs = require('fs');
 const { Storage } = require('@google-cloud/storage'); // Import Storage
 const projectId = 'easychat-7788b';
-=======
-const { Storage } = require('@google-cloud/storage');
-const serviceAccount = require('./serviceAccountKey.json');
->>>>>>> Stashed changes
+const router = express.Router();
+
+
 
 // Cấu hình Firebase Admin SDK
+const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     projectId: 'easychat-7788b',
@@ -22,9 +20,8 @@ admin.initializeApp({
 const db = admin.firestore();
 const storage = new Storage();
 const bucket = storage.bucket('easychat-7788b.appspot.com');
-const app = express();
 
-// Middleware
+const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -42,28 +39,23 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// Đăng ký người dùng
 app.post('/api/signup', async (req, res) => {
     const { email, password, name } = req.body;
 
+    // Kiểm tra các giá trị nhận được
     if (!email || !password || !name) {
         return res.status(400).json({ message: 'Vui lòng điền đầy đủ thông tin' });
     }
 
     try {
-<<<<<<< Updated upstream
         // Tạo người dùng trong Firestore
-        const userRef = admin.firestore().collection('users').doc(email);
+        const userRef = admin.firestore().collection('users').doc();
         const userData = {
             email,
             password,  // Cần mã hóa mật khẩu trước khi lưu vào Firestore
             name,
         };
 
-=======
-        const userRef = db.collection('users').doc();
-        const userData = { email, password, name };
->>>>>>> Stashed changes
         await userRef.set(userData);
         res.status(200).json({ message: 'Đăng ký thành công' });
     } catch (error) {
@@ -71,25 +63,33 @@ app.post('/api/signup', async (req, res) => {
         res.status(500).json({ message: 'Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại' });
     }
 });
-
-<<<<<<< Updated upstream
-// API đăng nhập người dùng
-=======
-// Lấy danh sách cuộc trò chuyện của user
+// Lấy danh sách các cuộc trò chuyện của user hiện tại
+// Trong server.js
 app.get('/api/conversations', async (req, res) => {
     const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
 
     try {
         const conversationsRef = db.collection('conversations');
         const sentQuery = conversationsRef.where('senderID', '==', userId).get();
         const receivedQuery = conversationsRef.where('receiverID', '==', userId).get();
+
         const [sentSnapshots, receivedSnapshots] = await Promise.all([sentQuery, receivedQuery]);
 
         const conversations = [];
-        sentSnapshots.forEach(doc => conversations.push({ id: doc.id, ...doc.data() }));
-        receivedSnapshots.forEach(doc => conversations.push({ id: doc.id, ...doc.data() }));
 
+        sentSnapshots.forEach((doc) => {
+            conversations.push({ id: doc.id, ...doc.data() });
+        });
+
+        receivedSnapshots.forEach((doc) => {
+            conversations.push({ id: doc.id, ...doc.data() });
+        });
+
+        console.log("Conversations:", conversations); // Kiểm tra dữ liệu trả về
         res.status(200).json(conversations);
     } catch (error) {
         console.error('Error fetching conversations:', error);
@@ -97,8 +97,9 @@ app.get('/api/conversations', async (req, res) => {
     }
 });
 
-// Lấy tin nhắn từ cuộc trò chuyện
-app.get('/api/messages', async (req, res) => {
+
+// Lấy tin nhắn từ một cuộc trò chuyện cụ thể
+router.get('/messages', async (req, res) => {
     const { conversationId } = req.query;
 
     try {
@@ -106,7 +107,10 @@ app.get('/api/messages', async (req, res) => {
         const messagesSnapshot = await messagesRef.orderBy('timestamp').get();
 
         const messages = [];
-        messagesSnapshot.forEach(doc => messages.push({ id: doc.id, ...doc.data() }));
+        messagesSnapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
+        });
+
         res.status(200).json({ messages });
     } catch (error) {
         console.error('Error fetching messages:', error);
@@ -115,12 +119,13 @@ app.get('/api/messages', async (req, res) => {
 });
 
 // Gửi tin nhắn mới
-app.post('/api/messages', async (req, res) => {
+router.post('/messages', async (req, res) => {
     const { conversationId, senderID, receiverID, message, type, timestamp } = req.body;
 
     try {
         const messagesRef = db.collection('chat').doc(conversationId).collection('messages');
         const newMessage = { senderID, receiverID, message, type, timestamp };
+
         await messagesRef.add(newMessage);
 
         res.status(201).json({ message: 'Message sent successfully.' });
@@ -130,64 +135,72 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
-// Lấy userId từ email
-app.get('/api/user-id', async (req, res) => {
+
+// Thêm API để lấy userId dựa trên email
+router.get('/api/user-id', async (req, res) => {
     const { email } = req.query;
-    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
 
     try {
         const userRef = db.collection('users');
         const snapshot = await userRef.where('email', '==', email).get();
 
-        if (snapshot.empty) return res.status(404).json({ error: 'User not found' });
+        if (snapshot.empty) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
-        const userDoc = snapshot.docs[0];
-        res.status(200).json({ userId: userDoc.id });
+        const userDoc = snapshot.docs[0];  // Lấy document đầu tiên nếu có
+        res.status(200).json({ userId: userDoc.id });  // Trả về userId của người dùng
     } catch (error) {
         console.error('Error fetching userId:', error);
         res.status(500).json({ error: 'Failed to fetch userId' });
     }
 });
 
-// Đăng nhập người dùng
->>>>>>> Stashed changes
+
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc.' });
+    }
+
     try {
+        // Truy vấn Firestore để tìm user theo email
         const snapshot = await db.collection('users').where('email', '==', email).get();
 
-        if (snapshot.empty) return res.status(404).json({ message: 'User not found' });
+        if (snapshot.empty) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng với email này.' });
+        }
 
-        const user = snapshot.docs[0].data();
-        const userId = snapshot.docs[0].id;
+        const userDoc = snapshot.docs[0];
+        const user = userDoc.data();
 
         // Kiểm tra mật khẩu
-        if (user.password !== password) return res.status(401).json({ message: 'Incorrect password' });
+        if (user.password !== password) {
+            return res.status(401).json({ message: 'Mật khẩu không đúng.' });
+        }
 
-<<<<<<< Updated upstream
-        res.status(200).json({
-            message: 'Login successful',
+        // Trả về thông tin người dùng
+        return res.status(200).json({
+            message: 'Đăng nhập thành công.',
             user: {
-                id: userId,
+                id: userDoc.id,
                 name: user.name,
                 email: user.email,
-                image: user.image
-            }
-=======
-        // Tạo JWT
-        const token = jwt.sign({ id: userId, name: user.name, email: user.email }, 'SECRET_KEY', { expiresIn: '1h' });
-
-        res.status(200).json({
-            message: 'Login successful',
-            token,
-            user: { id: userId, name: user.name, email: user.email, image: user.image || null },
->>>>>>> Stashed changes
+                image: user.image || null,
+            },
         });
     } catch (error) {
-        res.status(500).json({ error: 'Error logging in', details: error });
+        console.error('Lỗi trong quá trình đăng nhập:', error);
+        return res.status(500).json({ error: 'Lỗi trong quá trình đăng nhập.', details: error.message });
     }
 });
 
+
+module.exports = router;
 // Bắt đầu server
 app.listen(5000, () => console.log("Server started on port 5000"));
