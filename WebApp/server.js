@@ -97,47 +97,105 @@ app.get('/api/conversations', async (req, res) => {
     }
 });
 
-
-// Lấy tin nhắn từ một cuộc trò chuyện cụ thể
-router.get('/messages', async (req, res) => {
-    const { conversationId } = req.query;
-
+app.post('/api/getMessages', async (req, res) => {
     try {
-        const messagesRef = db.collection('chat').doc(conversationId).collection('messages');
-        const messagesSnapshot = await messagesRef.orderBy('timestamp').get();
+        const { currentUserId, selectedUserId } = req.body;
 
-        const messages = [];
-        messagesSnapshot.forEach((doc) => {
-            messages.push({ id: doc.id, ...doc.data() });
-        });
+        if (!currentUserId || !selectedUserId) {
+            return res.status(400).json({ error: 'currentUserId và selectedUserId là bắt buộc' });
+        }
 
-        res.status(200).json({ messages });
+        const chatRef = db.collection('chat');
+        const querySnapshot = await chatRef
+            .where('senderID', 'in', [currentUserId, selectedUserId])
+            .where('receiverID', 'in', [currentUserId, selectedUserId])
+            .orderBy('timestamp', 'asc') // Sắp xếp theo thời gian
+            .get();
+
+        const messages = querySnapshot.docs
+            .filter(doc => {
+                const data = doc.data();
+                return (
+                    (data.senderID === currentUserId && data.receiverID === selectedUserId) ||
+                    (data.senderID === selectedUserId && data.receiverID === currentUserId)
+                );
+            })
+            .map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+
+        return res.json({ messages });
     } catch (error) {
-        console.error('Error fetching messages:', error);
-        res.status(500).json({ error: 'Failed to fetch messages.' });
+        console.error('Lỗi khi lấy tin nhắn:', error);
+        res.status(500).json({ error: 'Lỗi khi lấy tin nhắn' });
     }
 });
 
 // Gửi tin nhắn mới
-router.post('/messages', async (req, res) => {
-    const { conversationId, senderID, receiverID, message, type, timestamp } = req.body;
-
+app.post('/api/sendMessage', async (req, res) => {
     try {
-        const messagesRef = db.collection('chat').doc(conversationId).collection('messages');
-        const newMessage = { senderID, receiverID, message, type, timestamp };
+        const { senderID, receiverID, message, type, file } = req.body; // Nhận các tham số gửi từ frontend
 
-        await messagesRef.add(newMessage);
+        // Kiểm tra nếu tin nhắn là file (ảnh/video)
+        let fileUrl = null;
+        if (type === 'media' && file) {
+            // Upload file lên Firebase Storage (giả sử file là base64 hoặc file URL)
+            const buffer = Buffer.from(file, 'base64');
+            const fileName = `media/${Date.now()}.jpg`; // Đặt tên cho file (có thể là ảnh hoặc video)
+            const fileUpload = storage.bucket().file(fileName);
 
-        res.status(201).json({ message: 'Message sent successfully.' });
+            await fileUpload.save(buffer, {
+                metadata: { contentType: 'image/jpeg' }, // Thay đổi loại file nếu cần
+                public: true,
+            });
+
+            // Lấy URL công khai của file đã tải lên
+            fileUrl = `https://storage.googleapis.com/${fileUpload.bucket.name}/${fileUpload.name}`;
+        }
+
+        // Tạo đối tượng tin nhắn mới
+        const newMessage = {
+            senderID,
+            receiverID,
+            message,
+            type,
+            file: fileUrl, // Nếu có file, lưu URL file vào đây
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Lưu tin nhắn vào Firestore (collection 'chat')
+        const messageRef = await db.collection('chat').add(newMessage);
+
+        // Cập nhật tin nhắn cuối cùng trong cuộc trò chuyện
+        const conversationRef = db.collection('conversations');
+        const conversationSnapshot = await conversationRef
+            .where('senderID', '==', senderID)
+            .where('receiverID', '==', receiverID)
+            .get();
+
+        if (!conversationSnapshot.empty) {
+            // Nếu đã có cuộc trò chuyện, cập nhật tin nhắn cuối cùng
+            conversationSnapshot.forEach(doc => {
+                doc.ref.update({
+                    lastMessage: message,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            });
+        }
+
+        // Trả về thông báo thành công
+        res.status(200).json({ success: true, message: 'Tin nhắn đã được gửi thành công!', messageId: messageRef.id });
     } catch (error) {
-        console.error('Error sending message:', error);
-        res.status(500).json({ error: 'Failed to send message.' });
+        console.error('Lỗi khi gửi tin nhắn:', error);
+        res.status(500).json({ success: false, error: 'Đã xảy ra lỗi khi gửi tin nhắn' });
     }
 });
 
 
-// Thêm API để lấy userId dựa trên email
-router.get('/api/user-id', async (req, res) => {
+
+
+app.get('/api/users', async (req, res) => {
     const { email } = req.query;
 
     if (!email) {
@@ -145,18 +203,21 @@ router.get('/api/user-id', async (req, res) => {
     }
 
     try {
-        const userRef = db.collection('users');
-        const snapshot = await userRef.where('email', '==', email).get();
+        const snapshot = await db.collection('users').where('email', '==', email).get();
 
         if (snapshot.empty) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const userDoc = snapshot.docs[0];  // Lấy document đầu tiên nếu có
-        res.status(200).json({ userId: userDoc.id });  // Trả về userId của người dùng
+        let userId;
+        snapshot.forEach((doc) => {
+            userId = doc.id; // Lấy userId từ document ID
+        });
+
+        res.status(200).json({ userId });
     } catch (error) {
-        console.error('Error fetching userId:', error);
-        res.status(500).json({ error: 'Failed to fetch userId' });
+        console.error('Error fetching user by email:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

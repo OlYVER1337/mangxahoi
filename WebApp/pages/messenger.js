@@ -1,21 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { db } from '../firebase'; // Đảm bảo bạn đã import db từ firebase config
+import { db, storage } from '../firebase'; // Đảm bảo bạn đã cấu hình Firestore và Storage
 import { collection, getDocs, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
-
-// Hàm để lấy doc.id của người dùng từ email
-const getUserIdByEmail = async (email) => {
-    const usersRef = collection(db, 'users');
-    const userQuery = query(usersRef, where('email', '==', email));
-    const userSnapshot = await getDocs(userQuery);
-
-    if (!userSnapshot.empty) {
-        const userDoc = userSnapshot.docs[0]; // Lấy doc đầu tiên trong kết quả
-        return userDoc.id; // Trả về doc.id của người dùng
-    } else {
-        throw new Error('User not found');
-    }
-};
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getUserIdByEmail } from '../utils/utils'; 
 
 const Messenger = () => {
     const { data: session } = useSession(); // Lấy session để lấy thông tin người dùng
@@ -81,7 +69,7 @@ const Messenger = () => {
         }
     };
 
-    // Hàm gửi tin nhắn mới
+    // Hàm gửi tin nhắn mới (văn bản)
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return; // Không gửi tin nhắn trống
@@ -91,7 +79,7 @@ const Messenger = () => {
             receiverID: selectedUserId,
             message: newMessage,
             timestamp: serverTimestamp(),
-            type: 'text', // Nếu bạn gửi tin nhắn media thì thay thế thành 'media'
+            type: 'text',
         };
 
         try {
@@ -110,6 +98,39 @@ const Messenger = () => {
         }
     };
 
+    // Hàm xử lý khi chọn file
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const storageRef = ref(storage, `uploads/${file.name}-${Date.now()}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            // Tạo tin nhắn cho file
+            const messageData = {
+                senderID: currentUserId,
+                receiverID: selectedUserId,
+                message: '', // Để trống nếu là file
+                file: downloadURL,
+                timestamp: serverTimestamp(),
+                type: 'media',
+            };
+
+            // Lưu vào Firestore
+            await addDoc(collection(db, 'chat'), messageData);
+
+            // Cập nhật danh sách tin nhắn
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { ...messageData, id: new Date().getTime() },
+            ]);
+        } catch (error) {
+            console.error('Lỗi khi tải file:', error);
+        }
+    };
+
     if (loading) {
         return <div>Loading conversations...</div>;
     }
@@ -122,8 +143,6 @@ const Messenger = () => {
                 <ul>
                     {conversations.map((conversation) => {
                         const isCurrentUserSender = conversation.senderID === currentUserId;
-
-                        // Chọn ảnh tùy thuộc vào người gửi/nhận
                         const image = isCurrentUserSender
                             ? conversation.receiverImage
                             : conversation.senderImage;
@@ -159,16 +178,24 @@ const Messenger = () => {
                                 <li
                                     key={message.id}
                                     className={`mb-4 p-2 rounded-lg ${message.senderID === currentUserId
-                                        ? 'bg-blue-100 text-right ml-auto' // Tin nhắn của người dùng hiện tại (sang bên phải)
-                                        : 'bg-gray-100 text-left mr-auto' // Tin nhắn của người còn lại (sang bên trái)
+                                        ? 'bg-blue-100 text-right ml-auto'
+                                        : 'bg-gray-100 text-left mr-auto'
                                         }`}
                                 >
                                     {message.type === 'media' ? (
-                                        <img
-                                            src={message.file}
-                                            alt="Media"
-                                            className="max-w-full rounded"
-                                        />
+                                        message.file.includes('video') ? (
+                                            <video
+                                                controls
+                                                className="max-w-full rounded"
+                                                src={message.file}
+                                            />
+                                        ) : (
+                                            <img
+                                                src={message.file}
+                                                alt="Media"
+                                                className="max-w-full rounded"
+                                            />
+                                        )
                                     ) : (
                                         <p>{message.message}</p>
                                     )}
@@ -188,6 +215,19 @@ const Messenger = () => {
                                 placeholder="Enter message"
                                 className="flex-1 p-2 border rounded-l"
                             />
+                            <input
+                                type="file"
+                                id="fileInput"
+                                accept="image/*,video/*"
+                                onChange={(e) => handleFileChange(e)}
+                                className="hidden"
+                            />
+                            <label
+                                htmlFor="fileInput"
+                                className="p-2 bg-gray-300 text-white rounded-l cursor-pointer"
+                            >
+                                📎
+                            </label>
                             <button
                                 type="submit"
                                 className="p-2 bg-blue-500 text-white rounded-r"
@@ -197,7 +237,7 @@ const Messenger = () => {
                         </form>
                     </>
                 ) : (
-                    <p>Select a conversation to view messages</p>
+                    <div className="text-center">Select a conversation to view messages</div>
                 )}
             </div>
         </div>
