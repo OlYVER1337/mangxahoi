@@ -70,8 +70,7 @@
               "RelativeToolTip": "firebase.js",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAABkAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2024-11-29T07:08:27.845Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-29T07:08:27.845Z"
             },
             {
               "$type": "Document",
@@ -83,8 +82,7 @@
               "RelativeToolTip": "utils\\utils.js",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAoAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2024-11-29T05:15:35.128Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-29T05:15:35.128Z"
             },
             {
               "$type": "Document",
@@ -94,7 +92,7 @@
               "RelativeDocumentMoniker": "pages\\messenger.js",
               "ToolTip": "D:\\Repositories\\WebApp\\pages\\messenger.js",
               "RelativeToolTip": "pages\\messenger.js",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAwAAAAuAAAA",
+              "ViewState": "AQIAAFEAAAAAAAAAAAAAAFgAAAAbAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2024-11-27T13:26:52.558Z",
               "EditorCaption": ""
@@ -109,8 +107,7 @@
               "RelativeToolTip": "server.js",
               "ViewState": "AQIAANwAAAAAAAAAAAAQwAoBAABDAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2024-11-09T07:08:53.442Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-09T07:08:53.442Z"
             }
           ]
         },
@@ -124,15 +121,19 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
-            },
-            {
-              "$type": "Bookmark",
               "Name": "ST:1:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
             },
             {
               "$type": "Bookmark",
               "Name": "ST:18:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:17:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
             }
           ]
         },

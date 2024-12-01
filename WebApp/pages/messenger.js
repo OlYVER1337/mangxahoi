@@ -1,9 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { db, storage } from '../firebase'; // Đảm bảo bạn đã cấu hình Firestore và Storage
-import { collection, getDocs, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, addDoc, serverTimestamp, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getUserIdByEmail } from '../utils/utils'; 
+import { getUserIdByEmail } from '../utils/utils';
 
 const Messenger = () => {
     const { data: session } = useSession(); // Lấy session để lấy thông tin người dùng
@@ -13,6 +13,14 @@ const Messenger = () => {
     const [messages, setMessages] = useState([]); // State để lưu tin nhắn
     const [currentUserId, setCurrentUserId] = useState(null); // Lưu ID của người dùng hiện tại
     const [newMessage, setNewMessage] = useState(''); // State để lưu tin nhắn mới
+    const messagesEndRef = useRef(null); // Ref để cuộn xuống cuối danh sách tin nhắn
+
+    // Hàm cuộn xuống cuối danh sách tin nhắn
+    const scrollToBottom = () => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
     // Lấy danh sách cuộc hội thoại
     useEffect(() => {
@@ -36,40 +44,47 @@ const Messenger = () => {
     }, [session?.user?.email]);
 
     // Hàm xử lý khi nhấn vào một cuộc hội thoại
-    const handleConversationClick = async (conversation) => {
-        try {
-            let selectedUser;
+    const handleConversationClick = (conversation) => {
+        let selectedUser;
 
-            // Kiểm tra người dùng hiện tại là người gửi hay người nhận trong cuộc trò chuyện
-            if (conversation.senderID === currentUserId) {
-                selectedUser = conversation.receiverID; // Nếu là người gửi, lấy người nhận
-            } else if (conversation.receiverID === currentUserId) {
-                selectedUser = conversation.senderID; // Nếu là người nhận, lấy người gửi
-            }
+        // Kiểm tra người dùng hiện tại là người gửi hay người nhận trong cuộc trò chuyện
+        if (conversation.senderID === currentUserId) {
+            selectedUser = conversation.receiverID;
+        } else if (conversation.receiverID === currentUserId) {
+            selectedUser = conversation.senderID;
+        }
 
-            setSelectedUserId(selectedUser); // Lưu ID của người được chọn
+        setSelectedUserId(selectedUser); // Lưu ID của người được chọn
 
-            // Lấy tin nhắn giữa hai người dùng từ Firestore
-            const chatRef = collection(db, 'chat');
-            const chatQuery = query(
-                chatRef,
-                where('senderID', 'in', [currentUserId, selectedUser]),
-                where('receiverID', 'in', [currentUserId, selectedUser]),
-                orderBy('timestamp', 'asc') // Sắp xếp theo thời gian
-            );
-            const chatSnapshot = await getDocs(chatQuery);
-            const chatMessages = chatSnapshot.docs.map((doc) => ({
+        // Lắng nghe tin nhắn giữa hai người dùng từ Firestore theo thời gian thực
+        const chatRef = collection(db, 'chat');
+        const chatQuery = query(
+            chatRef,
+            where('senderID', 'in', [currentUserId, selectedUser]),
+            where('receiverID', 'in', [currentUserId, selectedUser]),
+            orderBy('timestamp', 'asc')
+        );
+
+        // Bắt đầu listener Firestore
+        const unsubscribe = onSnapshot(chatQuery, (snapshot) => {
+            const chatMessages = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             }));
 
-            setMessages(chatMessages); // Lưu danh sách tin nhắn
-        } catch (error) {
-            console.error("Lỗi khi lấy tin nhắn:", error);
-        }
+            setMessages(chatMessages); // Cập nhật danh sách tin nhắn
+            scrollToBottom(); // Cuộn xuống cuối khi nhận tin nhắn mới
+        });
+
+        // Dọn dẹp listener khi người dùng đổi cuộc hội thoại hoặc component bị unmount
+        return () => unsubscribe();
     };
 
-    // Hàm gửi tin nhắn mới (văn bản)
+    // Gọi scrollToBottom mỗi khi danh sách tin nhắn thay đổi
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return; // Không gửi tin nhắn trống
@@ -86,15 +101,24 @@ const Messenger = () => {
             // Thêm tin nhắn vào Firestore
             await addDoc(collection(db, 'chat'), messageData);
 
-            // Cập nhật danh sách tin nhắn sau khi gửi
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                { ...messageData, id: new Date().getTime() }, // Thêm tin nhắn vào cuối
-            ]);
+            // Tìm docID của cuộc hội thoại hiện tại
+            const conversationDoc = conversations.find(
+                (c) =>
+                    (c.senderID === currentUserId && c.receiverID === selectedUserId) ||
+                    (c.receiverID === currentUserId && c.senderID === selectedUserId)
+            );
+
+            if (conversationDoc?.id) {
+                const conversationRef = doc(db, 'conversations', conversationDoc.id);
+                await updateDoc(conversationRef, {
+                    lastMessage: newMessage,
+                    lastUpdated: serverTimestamp(), // Cập nhật thời gian cuối cùng
+                });
+            }
 
             setNewMessage(''); // Xóa tin nhắn sau khi gửi
         } catch (error) {
-            console.error('Lỗi khi gửi tin nhắn:', error);
+            console.error('Lỗi khi gửi tin nhắn hoặc cập nhật lastMessage:', error);
         }
     };
 
@@ -120,12 +144,6 @@ const Messenger = () => {
 
             // Lưu vào Firestore
             await addDoc(collection(db, 'chat'), messageData);
-
-            // Cập nhật danh sách tin nhắn
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                { ...messageData, id: new Date().getTime() },
-            ]);
         } catch (error) {
             console.error('Lỗi khi tải file:', error);
         }
@@ -137,8 +155,8 @@ const Messenger = () => {
 
     return (
         <div className="flex h-screen">
-            {/* Sidebar chứa danh sách cuộc hội thoại */}
-            <div className="w-1/3 border-r p-4 overflow-y-auto">
+            {/* Sidebar Conversations */}
+            <div className="w-1/4 border-r p-4 overflow-y-auto">
                 <h2 className="text-xl font-semibold mb-4">Conversations</h2>
                 <ul>
                     {conversations.map((conversation) => {
@@ -168,79 +186,96 @@ const Messenger = () => {
                 </ul>
             </div>
 
-            {/* Khu vực hiển thị tin nhắn */}
-            <div className="w-2/3 p-4 overflow-y-auto">
-                <h2 className="text-xl font-semibold mb-4">Messages</h2>
-                {selectedUserId ? (
-                    <>
+            {/* Main Chat Area */}
+            <div className="w-1/2 flex flex-col h-full">
+                <div className="flex-1 overflow-y-auto p-4">
+                    <h2 className="text-xl font-semibold mb-4">Messages</h2>
+                    {selectedUserId ? (
                         <ul>
                             {messages.map((message) => (
                                 <li
                                     key={message.id}
-                                    className={`mb-4 p-2 rounded-lg ${message.senderID === currentUserId
-                                        ? 'bg-blue-100 text-right ml-auto'
-                                        : 'bg-gray-100 text-left mr-auto'
+                                    className={`flex items-center mb-4 ${message.senderID === currentUserId ? 'justify-end' : 'justify-start'
                                         }`}
                                 >
-                                    {message.type === 'media' ? (
-                                        message.file.includes('video') ? (
-                                            <video
-                                                controls
-                                                className="max-w-full rounded"
-                                                src={message.file}
-                                            />
-                                        ) : (
-                                            <img
-                                                src={message.file}
-                                                alt="Media"
-                                                className="max-w-full rounded"
-                                            />
-                                        )
-                                    ) : (
-                                        <p>{message.message}</p>
+                                    {message.senderID !== currentUserId && (
+                                        <img
+                                            src={conversations.find(c => c.senderID === message.senderID)?.senderImage || ''}
+                                            alt="Avatar"
+                                            className="w-8 h-8 rounded-full mr-2"
+                                        />
                                     )}
-                                    <span className="text-xs text-gray-500">
-                                        {new Date(message.timestamp?.seconds * 1000).toLocaleString()}
-                                    </span>
+                                    <div
+                                        className={`p-2 rounded-lg max-w-xs break-words ${message.senderID === currentUserId
+                                                ? 'bg-blue-500 text-white'
+                                                : 'bg-blue-100 text-black'
+                                            }`}
+                                    >
+                                        {message.type === 'media' ? (
+                                            message.file.includes('video') ? (
+                                                <video
+                                                    controls
+                                                    className="max-w-[200px] max-h-[200px] rounded"
+                                                    src={message.file}
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={message.file}
+                                                    alt="Media"
+                                                    className="max-w-[200px] max-h-[200px] rounded"
+                                                />
+                                            )
+                                        ) : (
+                                            <p>{message.message}</p>
+                                        )}
+                                    </div>
                                 </li>
                             ))}
+                            <div ref={messagesEndRef} />
                         </ul>
+                    ) : (
+                        <div className="text-center">Select a conversation to view messages</div>
+                    )}
+                </div>
 
-                        {/* Thanh nhập tin nhắn */}
-                        <form onSubmit={handleSendMessage} className="flex mt-4">
-                            <input
-                                type="text"
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder="Enter message"
-                                className="flex-1 p-2 border rounded-l"
-                            />
-                            <input
-                                type="file"
-                                id="fileInput"
-                                accept="image/*,video/*"
-                                onChange={(e) => handleFileChange(e)}
-                                className="hidden"
-                            />
-                            <label
-                                htmlFor="fileInput"
-                                className="p-2 bg-gray-300 text-white rounded-l cursor-pointer"
-                            >
-                                📎
-                            </label>
-                            <button
-                                type="submit"
-                                className="p-2 bg-blue-500 text-white rounded-r"
-                            >
-                                Send
-                            </button>
-                        </form>
-                    </>
-                ) : (
-                    <div className="text-center">Select a conversation to view messages</div>
-                )}
+                {/* Thanh nhập tin nhắn */}
+                <form onSubmit={handleSendMessage} className="flex items-center p-4 border-t bg-white">
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Enter message"
+                        className="flex-1 p-2 border rounded-l"
+                    />
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept="image/*,video/*"
+                        onChange={(e) => handleFileChange(e)}
+                        className="hidden"
+                    />
+                    <label
+                        htmlFor="fileInput"
+                        className="p-2 bg-gray-300 text-white rounded-l cursor-pointer"
+                    >
+                        📎
+                    </label>
+                    <button
+                        type="submit"
+                        className="p-2 bg-blue-500 text-white rounded-r"
+                    >
+                        Send
+                    </button>
+                </form>
+            </div>
+
+            {/* Right Sidebar (Settings Placeholder) */}
+            <div className="w-1/4 border-l p-4">
+                <h2 className="text-xl font-semibold mb-4">Settings</h2>
+                <div className="text-gray-500">Settings area placeholder. You can add components here later.</div>
             </div>
         </div>
+
     );
 };
 
