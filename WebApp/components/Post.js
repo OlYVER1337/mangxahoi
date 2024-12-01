@@ -18,20 +18,20 @@ import { db } from "../firebase";
   const [showCommentInput, setShowCommentInput] = useState(false);
 
   useEffect(() => {
-    setHasLikedby(likeBy.includes(session.user.uid));
+    setHasLikedby(likeBy.includes(session.user.id));
   }, [likeBy]);
 
   const handleLike = async () => {
     if (hasLikedby) {
       await updateDoc(doc(db, "posts", id), {
-        likedBy: arrayRemove(session.user.uid),
+        likedBy: arrayRemove(session.user.id),
       });
-      setLikes(likeBy.filter((uid) => uid !== session.user.uid));
+      setLikeBy(likeBy.filter((id) => id !== session.user.id));
     } else {
       await updateDoc(doc(db, "posts", id), {
-        likedBy: arrayUnion(session.user.uid),
+        likedBy: arrayUnion(session.user.id),
       });
-      setLikeBy([...likeBy, session.user.uid]);
+      setLikeBy([...likeBy, session.user.id]);
     }
   };
 
@@ -46,7 +46,7 @@ import { db } from "../firebase";
         content: commentInput,
         imageUrl: null,
         timestamp: serverTimestamp(),
-        userId: session.user.uid,
+        userId: session.user.id,
         userImage: session.user.image,
         userName: session.user.name,
       };
@@ -110,7 +110,7 @@ import { db } from "../firebase";
 
         <div className="text-gray-500 text-[26px] flex gap-4">
           <FiMoreHorizontal className="cursor-pointer" />
-          {isAdmin(data.userId, session.user.uid) && (
+          {isAdmin(data.userId, session.user.id) && (
             <MdOutlineClose
               className="cursor-pointer"
               onClick={() => {

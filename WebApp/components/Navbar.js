@@ -51,8 +51,7 @@ const Navbar = () => {
 
                 <div
                     className="icon_wrapper text-[20px] cursor-pointer"
-                    onClick={goToMessenger}
-                >
+                    onClick={goToMessenger}>
                     <BsMessenger />
                 </div>
 

@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import React from "react";
 
 import LeftSidebarLink from "./LeftSidebarLink";
@@ -6,14 +7,20 @@ import { BsChevronDown } from "react-icons/bs";
 
 const LeftSidebar = () => {
   const { data: session } = useSession();
+  const router = useRouter(); // Khởi tạo router
+
+  const gotoBlog = () => {
+    router.push("/Blog"); // Điều hướng đến trang /Blog
+  };
 
   return (
     <div className="px-4 fixed mt-5 hidden lg:block">
       <div className="flex flex-col gap-2">
-        <LeftSidebarLink
-          image={`data:image/png;base64,${session.user.image}`}
-          text={session.user.name}
-        />
+        <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-300" onClick={gotoBlog}>
+          <img src={session?.user?.image} alt="User" className="w-10 h-10 rounded-full" />
+          <span className="font-medium">{session?.user?.name}</span>
+        </div>
+        
         <LeftSidebarLink image="/friends.png" text="Friends" />
         <LeftSidebarLink image="/group.png" text="Groups" />
         <LeftSidebarLink image="/market.png" text="Marketplace" />
