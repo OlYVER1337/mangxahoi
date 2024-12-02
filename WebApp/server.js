@@ -29,15 +29,6 @@ app.use(bodyParser.json());
 const upload = multer({ dest: 'uploads/' });
 
 // API lấy danh sách bài viết
-app.get('/api/posts', async (req, res) => {
-    try {
-        const snapshot = await db.collection('posts').orderBy('createdAt', 'desc').get();
-        const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.status(200).json(posts);
-    } catch (error) {
-        res.status(500).json({ error: 'Error fetching posts', details: error });
-    }
-});
 
 app.post('/api/signup', async (req, res) => {
     const { email, password, name } = req.body;
@@ -220,6 +211,59 @@ app.get('/api/users', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+// API POST để đăng bài viết với file media
+app.post('/api/postArticle', upload.single('media'), async (req, res) => {
+    try {
+        const { userId, content, type } = req.body; // Nhận các tham số từ frontend
+        const mediaFile = req.file; // Nhận file tải lên từ multer
+
+        if (!userId || !content) {
+            return res.status(400).json({ error: 'userId và nội dung bài viết là bắt buộc.' });
+        }
+
+        let mediaUrl = null;
+
+        // Nếu có file đính kèm, tải file lên Firebase Storage
+        if (mediaFile) {
+            const fileName = `articles/${userId}/${Date.now()}_${mediaFile.originalname}`;
+            const fileUpload = bucket.file(fileName);
+
+            // Đọc file từ hệ thống và upload
+            await fileUpload.save(fs.readFileSync(mediaFile.path), {
+                metadata: { contentType: mediaFile.mimetype },
+                public: true,
+            });
+
+            // Lấy URL công khai của file đã tải lên
+            mediaUrl = `https://storage.googleapis.com/${fileUpload.bucket.name}/${fileUpload.name}`;
+
+            // Xóa file tạm sau khi upload
+            fs.unlinkSync(mediaFile.path);
+        }
+
+        // Tạo đối tượng bài viết mới
+        const newPost = {
+            userId,
+            content,
+            mediaUrl,
+            type: type || 'text', // Loại bài viết: text, image, video
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Lưu bài viết vào Firestore
+        const postRef = await admin.firestore().collection('posts').add(newPost);
+
+        res.status(200).json({
+            success: true,
+            message: 'Bài viết đã được đăng thành công!',
+            postId: postRef.id,
+        });
+    } catch (error) {
+        console.error('Lỗi khi đăng bài:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi đăng bài viết.' });
+    }
+});
+
 
 
 app.post('/api/login', async (req, res) => {

@@ -5,90 +5,133 @@ import { FaGlobeAmericas } from "react-icons/fa";
 import { AiOutlineLike } from "react-icons/ai";
 import { IoArrowUpCircleSharp } from "react-icons/io5";
 import { TfiComment } from "react-icons/tfi";
-import { useSession } from "next-auth/react";
+import { useSession } from 'next-auth/react';
 import { deleteDoc, doc, updateDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 
-  const Post = ({ data, id }) => {
-  const { data: session } = useSession();
-  const [likeBy, setLikeBy] = useState(data.likedBy || []);
-  const [hasLikedby, setHasLikedby] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [commentInput, setCommentInput] = useState("");
-  const [showCommentInput, setShowCommentInput] = useState(false);
+const Post = ({ data, id }) => {
+    const { data: session } = useSession();
+    const [likeBy, setLikeBy] = useState(data.likedBy || []);
+    const [hasLikedby, setHasLikedby] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [commentInput, setCommentInput] = useState("");
+    const [showCommentInput, setShowCommentInput] = useState(false);
+    const [content, setContent] = useState("");
+    const [mediaFile, setMediaFile] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setHasLikedby(likeBy.includes(session.user.uid));
-  }, [likeBy]);
+    useEffect(() => {
+        setHasLikedby(likeBy.includes(session.user.id));
+    }, [likeBy]);
 
-  const handleLike = async () => {
-    if (hasLikedby) {
-      await updateDoc(doc(db, "posts", id), {
-        likedBy: arrayRemove(session.user.uid),
-      });
-      setLikes(likeBy.filter((uid) => uid !== session.user.uid));
-    } else {
-      await updateDoc(doc(db, "posts", id), {
-        likedBy: arrayUnion(session.user.uid),
-      });
-      setLikeBy([...likeBy, session.user.uid]);
-    }
-  };
+    const handleLike = async () => {
+        if (!session || !session.user.id) {
+            console.error("Session or user id is undefined");
+            return;
+        }
 
-  const isAdmin = (post_data_id, session_id) => {
-    if (post_data_id === session_id) return true;
-    return false;
-  };
+        if (hasLikedby) {
+            await updateDoc(doc(db, "posts", id), {
+                likedBy: arrayRemove(session.user.id),
+            });
+            setLikeBy(likeBy.filter((id) => id !== session.user.id));
+        } else {
+            await updateDoc(doc(db, "posts", id), {
+                likedBy: arrayUnion(session.user.id),
+            });
+            setLikeBy([...likeBy, session.user.id]);
+        }
+    };
 
-  const handleComment = async () => {
-    if (commentInput.trim()) {
-      const newComment = {
-        content: commentInput,
-        imageUrl: null,
-        timestamp: serverTimestamp(),
-        userId: session.user.uid,
-        userImage: session.user.image,
-        userName: session.user.name,
-      };
-      const docRef = await addDoc(collection(db, "posts", id, "comments"), newComment);
-      setComments([...comments, { id: docRef.id, ...newComment }]);
-      setCommentInput("");
-    }
-  };
+    const isAdmin = (post_data_id, session_id) => {
+        if (post_data_id === session_id) return true;
+        return false;
+    };
 
-  const toggleComments = () => {
-    setShowCommentInput(!showCommentInput);
-    if (!showCommentInput) {
-      onSnapshot(collection(db, "posts", id, "comments"), (snapshot) => {
-        setComments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      });
-    }
-  };
+    const handleComment = async () => {
+        if (commentInput.trim()) {
+            const newComment = {
+                content: commentInput,
+                imageUrl: null,
+                timestamp: serverTimestamp(),
+                userId: session.user.id,
+                userImage: session.user.image,
+                userName: session.user.name,
+            };
+            const docRef = await addDoc(collection(db, "posts", id, "comments"), newComment);
+            setComments([...comments, { id: docRef.id, ...newComment }]);
+            setCommentInput("");
+        }
+    };
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "posts", id, "comments"), (snapshot) => {
-      setComments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => unsubscribe(); // Clean up the subscription on unmount
-  }, [id]);
+    const toggleComments = () => {
+        setShowCommentInput(!showCommentInput);
+        if (!showCommentInput) {
+            onSnapshot(collection(db, "posts", id, "comments"), (snapshot) => {
+                setComments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            });
+        }
+    };
 
-  const formatTimestamp = (timestamp) => {
-    const now = new Date();
-    const postDate = new Date(timestamp);
-    const diffInMs = now - postDate;
-    const diffInMinutes = Math.floor(diffInMs / 60000);
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "posts", id, "comments"), (snapshot) => {
+            setComments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe(); // Clean up the subscription on unmount
+    }, [id]);
 
-    if (diffInDays > 0) {
-      return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
-    } else if (diffInHours > 0) {
-      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-    } else {
-      return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-    }
-  };
+    const formatTimestamp = (timestamp) => {
+        const now = new Date();
+        const postDate = new Date(timestamp);
+        const diffInMs = now - postDate;
+        const diffInMinutes = Math.floor(diffInMs / 60000);
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
+        if (diffInDays > 0) {
+            return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+        } else if (diffInHours > 0) {
+            return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+        } else {
+            return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+        }
+    };
+
+    const submitPost = async () => {
+        if (!content.trim()) {
+            alert("Nội dung bài viết không được để trống.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("userId", session.user.id); // ID người dùng
+        formData.append("content", content); // Nội dung bài viết
+        if (mediaFile) {
+            formData.append("media", mediaFile); // File đính kèm
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch('/api/postArticle', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+            if (response.ok && result.success) {
+                alert("Bài viết đã được đăng thành công!");
+                setContent(""); // Reset nội dung
+                setMediaFile(null); // Xoá file đã tải
+            } else {
+                alert("Có lỗi xảy ra: " + result.error);
+            }
+        } catch (error) {
+            console.error("Lỗi khi đăng bài:", error);
+            alert("Đã xảy ra lỗi khi đăng bài viết.");
+        } finally {
+            setLoading(false);
+        }
+    };
   return (
     <div className="py-4 bg-white rounded-[17px] shadow-md mt-5">
       <div className="px-4 flex justify-between items-center">
@@ -110,7 +153,7 @@ import { db } from "../firebase";
 
         <div className="text-gray-500 text-[26px] flex gap-4">
           <FiMoreHorizontal className="cursor-pointer" />
-          {isAdmin(data.userId, session.user.uid) && (
+          {isAdmin(data.userId, session.user.id) && (
             <MdOutlineClose
               className="cursor-pointer"
               onClick={() => {

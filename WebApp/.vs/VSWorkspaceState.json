@@ -2,11 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\components",
-    "\\pages",
     "\\pages\\api",
     "\\pages\\api\\auth",
     "\\utils"
   ],
-  "SelectedNode": "\\pages\\messenger.js",
+  "SelectedNode": "\\components\\WhatOnYourMind.js",
   "PreviewInSolutionExplorer": false
 }

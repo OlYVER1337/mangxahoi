@@ -29,6 +29,7 @@ const Messenger = () => {
     const [modalImage, setModalImage] = useState(null); // State quản lý ảnh hiển thị trong modal
     const [hoveredConversationId, setHoveredConversationId] = useState(null); // State cho hover
     const [menuVisible, setMenuVisible] = useState(null); // State để hiển thị menu ba chấm
+    const [selectedMessageId, setSelectedMessageId] = useState(null); // Quản lý ID tin nhắn đang được chọn
 
     // Hàm cuộn xuống cuối danh sách tin nhắn
     const scrollToBottom = () => {
@@ -130,6 +131,20 @@ const Messenger = () => {
             console.error('Lỗi khi gửi tin nhắn hoặc cập nhật lastMessage:', error);
         }
     };
+    const handleDeleteMessage = async (messageId) => {
+        try {
+            // Xóa tin nhắn khỏi Firestore
+            await deleteDoc(doc(db, 'chat', messageId));
+
+            // Cập nhật danh sách tin nhắn
+            setMessages((prevMessages) => prevMessages.filter((message) => message.id !== messageId));
+        } catch (error) {
+            console.error('Lỗi khi xóa tin nhắn:', error);
+        } finally {
+            setSelectedMessageId(null); // Đóng menu sau khi xóa
+        }
+    };
+
 
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
@@ -182,13 +197,16 @@ const Messenger = () => {
     };
 
     // Lắng nghe sự kiện click bên ngoài để đóng menu
+ 
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // Kiểm tra nếu click ra ngoài menu hoặc nút ba chấm
             if (
                 !event.target.closest('.menu-container') &&
                 !event.target.closest('.menu-button')
             ) {
-                setMenuVisible(null);
+                setMenuVisible(null); // Đóng menu nếu click ra ngoài
+                setSelectedMessageId(null); // Đóng menu xóa tin nhắn nếu click ra ngoài
             }
         };
 
@@ -275,13 +293,13 @@ const Messenger = () => {
                                 {messages.map((message) => (
                                     <li
                                         key={message.id}
-                                        className={`flex items-center mb-4 ${message.senderID === currentUserId ? 'justify-end' : 'justify-start'
+                                        className={`relative flex items-center mb-4 ${message.senderID === currentUserId ? 'justify-end' : 'justify-start'
                                             }`}
                                     >
                                         <div
                                             className={`p-2 rounded-lg max-w-xs break-words ${message.senderID === currentUserId
-                                                ? 'bg-blue-500 text-white'
-                                                : 'bg-blue-100 text-black'
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-blue-100 text-black'
                                                 }`}
                                         >
                                             {message.type === 'media' && message.file ? (
@@ -295,10 +313,34 @@ const Messenger = () => {
                                                 <p>{message.message}</p>
                                             )}
                                         </div>
+
+                                        {/* Nút ba chấm cho từng tin nhắn */}
+                                        <button
+                                            className="menu-button ml-2 p-1 text-gray-500 hover:text-black bg-gray-200 hover:bg-gray-300 rounded-full text-lg"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Ngăn click lan tới phần tử cha
+                                                setSelectedMessageId(message.id); // Hiển thị menu xóa cho tin nhắn hiện tại
+                                            }}
+                                        >
+                                            ...
+                                        </button>
+
+                                        {/* Menu xóa tin nhắn */}
+                                        {selectedMessageId === message.id && (
+                                            <div className="menu-container absolute top-8 right-0 bg-white border rounded shadow p-2">
+                                                <button
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => handleDeleteMessage(message.id)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
                                     </li>
                                 ))}
                                 <div ref={messagesEndRef} />
                             </ul>
+
                         ) : (
                             <div className="text-center">Select a conversation to view messages</div>
                         )}
