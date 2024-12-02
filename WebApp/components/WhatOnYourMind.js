@@ -6,6 +6,9 @@ import { MdOutlineClose } from "react-icons/md";
 
 import Button from "./Button";
 import { useSession } from "next-auth/react";
+import { addDoc, collection, serverTimestamp, updateDoc, doc } from "firebase/firestore";
+import { db, storage } from "../firebase";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
 
 const WhatsOnYourMind = () => {
     const [input, setInput] = useState("");
@@ -30,47 +33,43 @@ const WhatsOnYourMind = () => {
 
         setLoading(true);
 
-        const formData = new FormData();
-        formData.append("userId", session.user.id);
-        formData.append("content", input);
-        formData.append("type", selectedFile ? "media" : "text");
-
-        if (fPicker.current && fPicker.current.files[0]) {
-            formData.append("media", fPicker.current.files[0]);
-        }
-
         try {
-            const response = await fetch("http://localhost:5000/api/postArticle", {
-                method: "POST",
-                body: formData,
+            // Thêm bài viết mới vào Firestore
+            const docRef = await addDoc(collection(db, "posts"), {
+                userId: session.user.id,
+                userName: session.user.name,
+                userImage: session.user.image,
+                content: input,
+                postTimestamp: serverTimestamp(),
+                likedBy: [],
+                comments: [],
             });
 
-            const result = await response.json();
+            if (selectedFile) {
+                // Tải ảnh lên Firebase Storage
+                const imageRef = ref(storage, `posts/${docRef.id}/Image`);
+                await uploadString(imageRef, selectedFile, "data_url");
+                const downloadURL = await getDownloadURL(imageRef);
 
-            if (response.ok) {
-                alert("Bài viết đã được đăng thành công!");
-            } else {
-                console.error(result.error);
-                alert("Có lỗi xảy ra: " + result.error);
+                // Cập nhật URL ảnh trong Firestore
+                await updateDoc(doc(db, "posts", docRef.id), {
+                    postImage: downloadURL,
+                });
             }
+
+            alert("Bài viết đã được đăng thành công!");
+            setInput("");
+            setSelectedFile(null);
         } catch (error) {
-            console.error("Lỗi khi gửi bài viết:", error);
+            console.error("Lỗi khi đăng bài viết:", error);
             alert("Đã xảy ra lỗi khi gửi bài viết.");
         } finally {
             setLoading(false);
-            setInput("");
-            setSelectedFile(null);
-            if (fPicker.current) {
-                fPicker.current.value = "";
-            }
         }
     };
 
     return (
-        <div
-            className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${loading && "opacity-50"
-                }`}
-        >
+        <div className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${loading && "opacity-50"}`}>
             <div className="flex gap-4 border-b border-gray-300 pb-4">
                 <img
                     className="w-[44px] h-[44px] object-cover rounded-full"
@@ -118,7 +117,7 @@ const WhatsOnYourMind = () => {
                         type="file"
                         name="filePicker"
                         id="filePicker"
-                        accept="image/*,video/*"
+                        accept="image/*"
                         onChange={addImageToPost}
                         ref={fPicker}
                         hidden

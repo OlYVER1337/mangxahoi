@@ -2,9 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\components",
-    "\\pages\\api",
-    "\\pages\\api\\auth",
-    "\\utils"
+    "\\pages",
+    "\\public",
+    "\\styles"
   ],
   "SelectedNode": "\\components\\WhatOnYourMind.js",
   "PreviewInSolutionExplorer": false
