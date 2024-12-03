@@ -33,76 +33,43 @@ const WhatsOnYourMind = () => {
 
         setLoading(true);
 
-<<<<<<< HEAD
-        try {
-            // Thêm bài viết mới vào Firestore
-            const docRef = await addDoc(collection(db, "posts"), {
-                userId: session.user.id,
-                userName: session.user.name,
-                userImage: session.user.image,
-                content: input,
-                postTimestamp: serverTimestamp(),
-                likedBy: [],
-                comments: [],
-            });
-=======
-    const docRef = await addDoc(collection(db, "posts"), {
-      userId: session.user.id,
-      userName: session.user.name,
-      userImage: session.user.image,
-      content: input,
-      postTimestamp: serverTimestamp(),
-      likedBy: [],
-      comments: [],
-    });
->>>>>>> d1d2cda8a8c313179eb902a52bf0adf88a0dc808
+        const docRef = await addDoc(collection(db, "posts"), {
+            userId: session.user.id,
+            userName: session.user.name,
+            userImage: session.user.image,
+            content: input,
+            postTimestamp: serverTimestamp(),
+            likedBy: [],
+            comments: [],
+        });
 
-            if (selectedFile) {
-                // Tải ảnh lên Firebase Storage
-                const imageRef = ref(storage, `posts/${docRef.id}/Image`);
-                await uploadString(imageRef, selectedFile, "data_url");
+        const imageRef = ref(storage, `posts/${docRef.id}/Image`);
+
+        if (selectedFile) {
+            await uploadString(imageRef, selectedFile, "data_url").then(async () => {
                 const downloadURL = await getDownloadURL(imageRef);
-
-                // Cập nhật URL ảnh trong Firestore
                 await updateDoc(doc(db, "posts", docRef.id), {
                     postImage: downloadURL,
                 });
-            }
-
-            alert("Bài viết đã được đăng thành công!");
-            setInput("");
-            setSelectedFile(null);
-        } catch (error) {
-            console.error("Lỗi khi đăng bài viết:", error);
-            alert("Đã xảy ra lỗi khi gửi bài viết.");
-        } finally {
-            setLoading(false);
+            });
         }
+
+        setLoading(false);
+        setInput("");
+        setSelectedFile(null);
     };
 
-<<<<<<< HEAD
     return (
-        <div className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${loading && "opacity-50"}`}>
+        <div
+            className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${loading && "opacity-50"
+                }`}
+        >
             <div className="flex gap-4 border-b border-gray-300 pb-4">
                 <img
                     className="w-[44px] h-[44px] object-cover rounded-full"
-                    src={session.user.image}
+                    src={session?.user?.image}
                     alt="dp"
                 />
-=======
-  return (
-    <div
-      className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${
-        loading && "opacity-50"
-      }`}
-    >
-      <div className="flex gap-4 border-b border-gray-300 pb-4">
-        <img
-          className="w-[44px] h-[44px] object-cover rounded-full"
-          src={session?.user?.image}
-          alt="dp"
-        />
->>>>>>> d1d2cda8a8c313179eb902a52bf0adf88a0dc808
 
                 <input
                     className="outline-none border-none w-[100%] text-[18px] placeholder:text-gray-600"
@@ -144,7 +111,7 @@ const WhatsOnYourMind = () => {
                         type="file"
                         name="filePicker"
                         id="filePicker"
-                        accept="image/*"
+                        accept="Image/*"
                         onChange={addImageToPost}
                         ref={fPicker}
                         hidden
