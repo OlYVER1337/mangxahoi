@@ -5,7 +5,7 @@ import { FaGlobeAmericas } from "react-icons/fa";
 import { AiOutlineLike } from "react-icons/ai";
 import { IoArrowUpCircleSharp } from "react-icons/io5";
 import { TfiComment } from "react-icons/tfi";
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
 import { deleteDoc, doc, updateDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -16,20 +16,12 @@ const Post = ({ data, id }) => {
     const [comments, setComments] = useState([]);
     const [commentInput, setCommentInput] = useState("");
     const [showCommentInput, setShowCommentInput] = useState(false);
-    const [content, setContent] = useState("");
-    const [mediaFile, setMediaFile] = useState(null);
-    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         setHasLikedby(likeBy.includes(session.user.id));
     }, [likeBy]);
 
     const handleLike = async () => {
-        if (!session || !session.user.id) {
-            console.error("Session or user id is undefined");
-            return;
-        }
-
         if (hasLikedby) {
             await updateDoc(doc(db, "posts", id), {
                 likedBy: arrayRemove(session.user.id),
@@ -97,121 +89,86 @@ const Post = ({ data, id }) => {
         }
     };
 
-    const submitPost = async () => {
-        if (!content.trim()) {
-            alert("Nội dung bài viết không được để trống.");
-            return;
-        }
+    return (
+        <div className="py-4 bg-white rounded-[17px] shadow-md mt-5">
+            <div className="px-4 flex justify-between items-center">
+                <div className="flex gap-2">
+                    <img
+                        className="w-[44px] h-[44px] object-cover rounded-full"
+                        src={data.userImage}
+                        alt="dp"
+                    />
+                    <div>
+                        <h1 className="text-[16px] font-semibold">{data.userName}</h1>
+                        <div className="text-gray-500 flex items-center gap-2">
+                            <p>{data.postTimestamp ? formatTimestamp(data.postTimestamp.toDate()) : 'Unknown time'}</p>
+                            <p>·</p>
+                            <FaGlobeAmericas />
+                        </div>
+                    </div>
+                </div>
 
-        const formData = new FormData();
-        formData.append("userId", session.user.id); // ID người dùng
-        formData.append("content", content); // Nội dung bài viết
-        if (mediaFile) {
-            formData.append("media", mediaFile); // File đính kèm
-        }
-
-        setLoading(true);
-        try {
-            const response = await fetch('/api/postArticle', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const result = await response.json();
-            if (response.ok && result.success) {
-                alert("Bài viết đã được đăng thành công!");
-                setContent(""); // Reset nội dung
-                setMediaFile(null); // Xoá file đã tải
-            } else {
-                alert("Có lỗi xảy ra: " + result.error);
-            }
-        } catch (error) {
-            console.error("Lỗi khi đăng bài:", error);
-            alert("Đã xảy ra lỗi khi đăng bài viết.");
-        } finally {
-            setLoading(false);
-        }
-    };
-  return (
-    <div className="py-4 bg-white rounded-[17px] shadow-md mt-5">
-      <div className="px-4 flex justify-between items-center">
-        <div className="flex gap-2">
-          <img
-            className="w-[44px] h-[44px] object-cover rounded-full"
-            src={data.userImage}
-            alt="dp"
-          />
-          <div>
-            <h1 className="text-[16px] font-semibold">{data.userName}</h1>
-            <div className="text-gray-500 flex items-center gap-2">
-              <p>{data.postTimestamp ? formatTimestamp(data.postTimestamp.toDate()) : 'Unknown time'}</p>
-              <p>·</p>
-              <FaGlobeAmericas />
+                <div className="text-gray-500 text-[26px] flex gap-4">
+                    <FiMoreHorizontal className="cursor-pointer" />
+                    {isAdmin(data.userId, session.user.id) && (
+                        <MdOutlineClose
+                            className="cursor-pointer"
+                            onClick={() => {
+                                if (window.confirm("Delete this post?")) {
+                                    deleteDoc(doc(db, "posts", id));
+                                }
+                            }}
+                        />
+                    )}
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div className="text-gray-500 text-[26px] flex gap-4">
-          <FiMoreHorizontal className="cursor-pointer" />
-          {isAdmin(data.userId, session.user.id) && (
-            <MdOutlineClose
-              className="cursor-pointer"
-              onClick={() => {
-                if (window.confirm("Delete this post?")) {
-                  deleteDoc(doc(db, "posts", id));
-                }
-              }}
-            />
-          )}
-        </div>
-      </div>
+            <p className="px-4 mt-[15px] text-gray-800 font-normal">{data.content}</p>
 
-      <p className="px-4 mt-[15px] text-gray-800 font-normal">{data.content}</p>
-
-      <div className="mt-[15px]">
-        {data.postImage && <img src={data.postImage} alt="post pic" />}
-      </div>
-
-      <div className="mx-4 h-[1px] bg-gray-300 mt-[15px]"></div>
-
-      <div className="flex mt-[7px] text-gray-500">
-        <div className="flex gap-2 justify-center items-center w-[50%] py-2 rounded-[10px] hover:bg-gray-200 cursor-pointer" onClick={handleLike}>
-          <AiOutlineLike className={`text-[26px] ${hasLikedby ? "text-blue-500" : ""}`} />
-          <p className="font-medium">{likeBy.length} Like{likeBy.length !== 1 ? "s" : ""}</p>
-        </div>
-        <div className="flex gap-2 justify-center items-center w-[50%] py-2 rounded-[10px] hover:bg-gray-200 cursor-pointer" onClick={toggleComments}>
-          <TfiComment className="text-[20px] translate-y-[4px]" />
-          <p className="font-medium">{comments.length} Comment{comments.length !== 1 ? "s" : ""}</p>
-        </div>
-      </div>
-
-      {showCommentInput && (
-        <div>
-          {comments.map((comment) => (
-            <div key={comment.userId} className="flex gap-2 mt-2">
-              <img src={comment.userImage} alt="user" className="w-8 h-8 rounded-full" />
-              <div>
-                <p className="font-semibold">{comment.userName}</p>
-                <p>{comment.content}</p>
-              </div>
+            <div className="mt-[15px]">
+                {data.postImage && <img src={data.postImage} alt="post pic" />}
             </div>
-          ))}
-          <div className="relative">
-            <input
-              type="text"
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              placeholder="Add a comment..."
-              className="w-full p-2 border rounded pr-12"
-            />
-            <button onClick={handleComment} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[35px]">
-              <IoArrowUpCircleSharp />
-            </button>
-          </div>
+
+            <div className="mx-4 h-[1px] bg-gray-300 mt-[15px]"></div>
+
+            <div className="flex mt-[7px] text-gray-500">
+                <div className="flex gap-2 justify-center items-center w-[50%] py-2 rounded-[10px] hover:bg-gray-200 cursor-pointer" onClick={handleLike}>
+                    <AiOutlineLike className={`text-[26px] ${hasLikedby ? "text-blue-500" : ""}`} />
+                    <p className="font-medium">{likeBy.length} Like{likeBy.length !== 1 ? "s" : ""}</p>
+                </div>
+                <div className="flex gap-2 justify-center items-center w-[50%] py-2 rounded-[10px] hover:bg-gray-200 cursor-pointer" onClick={toggleComments}>
+                    <TfiComment className="text-[20px] translate-y-[4px]" />
+                    <p className="font-medium">{comments.length} Comment{comments.length !== 1 ? "s" : ""}</p>
+                </div>
+            </div>
+
+            {showCommentInput && (
+                <div>
+                    {comments.map((comment) => (
+                        <div key={comment.userId} className="flex gap-2 mt-2">
+                            <img src={comment.userImage} alt="user" className="w-8 h-8 rounded-full" />
+                            <div>
+                                <p className="font-semibold">{comment.userName}</p>
+                                <p>{comment.content}</p>
+                            </div>
+                        </div>
+                    ))}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={commentInput}
+                            onChange={(e) => setCommentInput(e.target.value)}
+                            placeholder="Add a comment..."
+                            className="w-full p-2 border rounded pr-12"
+                        />
+                        <button onClick={handleComment} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[35px]">
+                            <IoArrowUpCircleSharp />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Post;

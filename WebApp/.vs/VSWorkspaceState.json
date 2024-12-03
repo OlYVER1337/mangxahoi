@@ -3,9 +3,13 @@
     "",
     "\\components",
     "\\pages",
+    "\\pages\\admin",
+    "\\pages\\api",
+    "\\pages\\api\\admin",
+    "\\pages\\api\\auth",
     "\\public",
     "\\styles"
   ],
-  "SelectedNode": "\\components\\WhatOnYourMind.js",
+  "SelectedNode": "\\pages\\api\\auth\\userApi.js",
   "PreviewInSolutionExplorer": false
 }

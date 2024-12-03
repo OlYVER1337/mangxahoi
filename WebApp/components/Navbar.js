@@ -14,10 +14,14 @@ const Navbar = () => {
         router.push("/messenger"); // Điều hướng đến trang /messenger
     };
 
+    const goToHome = () => {
+        router.push("/"); // Điều hướng đến trang index
+    };
+
     return (
         <div className="py-2 px-4 bg-white shadow-md flex justify-between items-center top-0 sticky z-50">
             <div className="flex items-center gap-2">
-                <BsFacebook className="text-primary text-[40px]" />
+                <BsFacebook className="text-primary text-[40px] cursor-pointer" onClick={goToHome} />
 
                 <div className="relative hidden sm:block">
                     <AiOutlineSearch className="absolute text-[20px] top-[10px] left-[10px] text-gray-500" />
@@ -51,8 +55,7 @@ const Navbar = () => {
 
                 <div
                     className="icon_wrapper text-[20px] cursor-pointer"
-                    onClick={goToMessenger}
-                >
+                    onClick={goToMessenger}>
                     <BsMessenger />
                 </div>
 
@@ -62,7 +65,7 @@ const Navbar = () => {
 
                 <img
                     className="w-[44px] cursor-pointer rounded-full"
-                    src={session.user.image}
+                    src={session?.user?.image}
                     alt="dp"
                     onClick={signOut}
                 />

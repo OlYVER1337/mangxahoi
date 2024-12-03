@@ -22,3 +22,4 @@ export const deleteUser = async (userId) => {
     const userDoc = doc(db, 'users', userId); // Tên collection là 'users'
     await deleteDoc(userDoc);
 };
+z

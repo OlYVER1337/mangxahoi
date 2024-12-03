@@ -33,6 +33,7 @@ const WhatsOnYourMind = () => {
 
         setLoading(true);
 
+<<<<<<< HEAD
         try {
             // Thêm bài viết mới vào Firestore
             const docRef = await addDoc(collection(db, "posts"), {
@@ -44,6 +45,17 @@ const WhatsOnYourMind = () => {
                 likedBy: [],
                 comments: [],
             });
+=======
+    const docRef = await addDoc(collection(db, "posts"), {
+      userId: session.user.id,
+      userName: session.user.name,
+      userImage: session.user.image,
+      content: input,
+      postTimestamp: serverTimestamp(),
+      likedBy: [],
+      comments: [],
+    });
+>>>>>>> d1d2cda8a8c313179eb902a52bf0adf88a0dc808
 
             if (selectedFile) {
                 // Tải ảnh lên Firebase Storage
@@ -68,6 +80,7 @@ const WhatsOnYourMind = () => {
         }
     };
 
+<<<<<<< HEAD
     return (
         <div className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${loading && "opacity-50"}`}>
             <div className="flex gap-4 border-b border-gray-300 pb-4">
@@ -76,6 +89,20 @@ const WhatsOnYourMind = () => {
                     src={session.user.image}
                     alt="dp"
                 />
+=======
+  return (
+    <div
+      className={`px-4 py-6 bg-white rounded-[17px] shadow-md mt-5 ${
+        loading && "opacity-50"
+      }`}
+    >
+      <div className="flex gap-4 border-b border-gray-300 pb-4">
+        <img
+          className="w-[44px] h-[44px] object-cover rounded-full"
+          src={session?.user?.image}
+          alt="dp"
+        />
+>>>>>>> d1d2cda8a8c313179eb902a52bf0adf88a0dc808
 
                 <input
                     className="outline-none border-none w-[100%] text-[18px] placeholder:text-gray-600"
