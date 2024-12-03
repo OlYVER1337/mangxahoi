@@ -17,6 +17,7 @@ const Post = ({ data, id }) => {
     const [commentInput, setCommentInput] = useState("");
     const [showCommentInput, setShowCommentInput] = useState(false);
 
+
     useEffect(() => {
         setHasLikedby(likeBy.includes(session.user.id));
     }, [likeBy]);
@@ -34,6 +35,24 @@ const Post = ({ data, id }) => {
             setLikeBy([...likeBy, session.user.id]);
         }
     };
+  useEffect(() => {
+    setHasLikedby(likeBy.includes(session.user.id));
+  }, [likeBy]);
+
+  const handleLike = async () => {
+    if (hasLikedby) {
+      await updateDoc(doc(db, "posts", id), {
+        likedBy: arrayRemove(session.user.id),
+      });
+      setLikeBy(likeBy.filter((id) => id !== session.user.id));
+    } else {
+      await updateDoc(doc(db, "posts", id), {
+        likedBy: arrayUnion(session.user.id),
+      });
+      setLikeBy([...likeBy, session.user.id]);
+    }
+  };
+
 
     const isAdmin = (post_data_id, session_id) => {
         if (post_data_id === session_id) return true;
@@ -55,6 +74,23 @@ const Post = ({ data, id }) => {
             setCommentInput("");
         }
     };
+
+  const handleComment = async () => {
+    if (commentInput.trim()) {
+      const newComment = {
+        content: commentInput,
+        imageUrl: null,
+        timestamp: serverTimestamp(),
+        userId: session.user.id,
+        userImage: session.user.image,
+        userName: session.user.name,
+      };
+      const docRef = await addDoc(collection(db, "posts", id, "comments"), newComment);
+      setComments([...comments, { id: docRef.id, ...newComment }]);
+      setCommentInput("");
+    }
+  };
+
 
     const toggleComments = () => {
         setShowCommentInput(!showCommentInput);
@@ -123,7 +159,24 @@ const Post = ({ data, id }) => {
                 </div>
             </div>
 
+
             <p className="px-4 mt-[15px] text-gray-800 font-normal">{data.content}</p>
+
+        <div className="text-gray-500 text-[26px] flex gap-4">
+          <FiMoreHorizontal className="cursor-pointer" />
+          {isAdmin(data.userId, session.user.id) && (
+            <MdOutlineClose
+              className="cursor-pointer"
+              onClick={() => {
+                if (window.confirm("Delete this post?")) {
+                  deleteDoc(doc(db, "posts", id));
+                }
+              }}
+            />
+          )}
+        </div>
+      </div>
+
 
             <div className="mt-[15px]">
                 {data.postImage && <img src={data.postImage} alt="post pic" />}
