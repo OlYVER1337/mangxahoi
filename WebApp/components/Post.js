@@ -100,13 +100,12 @@ const Post = ({ data, id }) => {
 
     return (
         <div className="py-4 bg-white rounded-[17px] shadow-md mt-5">
-            {/* Header */}
             <div className="px-4 flex justify-between items-center">
                 <div className="flex gap-2">
                     <img
                         className="w-[44px] h-[44px] object-cover rounded-full"
                         src={data.userImage}
-                        alt="user profile"
+                        alt="dp"
                     />
                     <div>
                         <h1 className="text-[16px] font-semibold">{data.userName}</h1>
