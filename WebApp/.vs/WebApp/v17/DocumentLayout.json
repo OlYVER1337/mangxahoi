@@ -3,12 +3,24 @@
   "WorkspaceRootPath": "D:\\Repositories\\WebApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\api\\admin\\users.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\api\\admin\\users.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\manage-users.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\admin\\manage-users.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\ManageUsers.module.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\admin\\ManageUsers.module.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\dashboard.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\admin\\dashboard.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\admin\\login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\api\\admin\\users.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\api\\admin\\users.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\api\\admin\\logout.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
@@ -17,14 +29,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\api\\admin\\login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\api\\admin\\login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\admin\\login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\dashboard.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pages\\admin\\dashboard.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Repositories\\WebApp\\pages\\admin\\Dashboard.module.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
@@ -82,7 +86,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 1,
+              "Title": "ManageUsers.module.css",
+              "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\admin\\ManageUsers.module.css",
+              "RelativeDocumentMoniker": "pages\\admin\\ManageUsers.module.css",
+              "ToolTip": "D:\\Repositories\\WebApp\\pages\\admin\\ManageUsers.module.css",
+              "RelativeToolTip": "pages\\admin\\ManageUsers.module.css",
+              "ViewState": "AQIAAHgAAAAAAAAAAADwv4oAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2024-12-06T06:01:00.735Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "Dashboard.module.css",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\admin\\Dashboard.module.css",
               "RelativeDocumentMoniker": "pages\\admin\\Dashboard.module.css",
@@ -90,38 +107,37 @@
               "RelativeToolTip": "pages\\admin\\Dashboard.module.css",
               "ViewState": "AQIAADMAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2024-12-05T07:00:18.81Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-05T07:00:18.81Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "manage-users.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\admin\\manage-users.js",
               "RelativeDocumentMoniker": "pages\\admin\\manage-users.js",
               "ToolTip": "D:\\Repositories\\WebApp\\pages\\admin\\manage-users.js",
               "RelativeToolTip": "pages\\admin\\manage-users.js",
-              "ViewState": "AQIAAC0AAAAAAAAAAAAUwJoAAABJAAAA",
+              "ViewState": "AQIAAHMAAAAAAAAAAAAmwKcAAAAqAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2024-12-05T07:00:07.032Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "users.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\api\\admin\\users.js",
               "RelativeDocumentMoniker": "pages\\api\\admin\\users.js",
               "ToolTip": "D:\\Repositories\\WebApp\\pages\\api\\admin\\users.js",
               "RelativeToolTip": "pages\\api\\admin\\users.js",
-              "ViewState": "AQIAAAAAAAAAAAAAAADwvxsAAAAJAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABYAAAAJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2024-12-05T06:59:32.942Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "logout.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\api\\admin\\logout.js",
               "RelativeDocumentMoniker": "pages\\api\\admin\\logout.js",
@@ -129,12 +145,11 @@
               "RelativeToolTip": "pages\\api\\admin\\logout.js",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAEAAAAnAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2024-12-05T06:40:52.38Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-05T06:40:52.38Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "Login.module.css",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\admin\\Login.module.css",
               "RelativeDocumentMoniker": "pages\\admin\\Login.module.css",
@@ -142,12 +157,11 @@
               "RelativeToolTip": "pages\\admin\\Login.module.css",
               "ViewState": "AQIAAAQAAAAAAAAAAAAIwBkAAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2024-12-03T07:18:57.855Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-03T07:18:57.855Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "verify.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\api\\admin\\verify.js",
               "RelativeDocumentMoniker": "pages\\api\\admin\\verify.js",
@@ -155,12 +169,11 @@
               "RelativeToolTip": "pages\\api\\admin\\verify.js",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAABgAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2024-12-03T06:07:17.695Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-03T06:07:17.695Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "login.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\api\\admin\\login.js",
               "RelativeDocumentMoniker": "pages\\api\\admin\\login.js",
@@ -168,12 +181,11 @@
               "RelativeToolTip": "pages\\api\\admin\\login.js",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAsAAAA1AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2024-12-03T04:30:58.898Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-03T04:30:58.898Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "login.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\admin\\login.js",
               "RelativeDocumentMoniker": "pages\\admin\\login.js",
@@ -186,13 +198,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 2,
               "Title": "dashboard.js",
               "DocumentMoniker": "D:\\Repositories\\WebApp\\pages\\admin\\dashboard.js",
               "RelativeDocumentMoniker": "pages\\admin\\dashboard.js",
               "ToolTip": "D:\\Repositories\\WebApp\\pages\\admin\\dashboard.js",
               "RelativeToolTip": "pages\\admin\\dashboard.js",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAFcAAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAuAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2024-12-05T06:35:54.676Z",
               "EditorCaption": ""

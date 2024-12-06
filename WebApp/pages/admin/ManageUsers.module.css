@@ -1,0 +1,147 @@
+.manageUsersContainer {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.addUserBtn {
+    display: block;
+    margin: 0 auto 20px;
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+    .addUserBtn:hover {
+        background-color: #45a049;
+    }
+
+.loading, .error {
+    text-align: center;
+    margin: 20px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.userTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+    .userTable th, .userTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .userTable th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-weight: bold;
+    }
+
+    .userTable tr:hover {
+        background-color: #f1f1f1;
+    }
+
+.editBtn, .deleteBtn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 5px;
+    color: white;
+}
+
+.editBtn {
+    background-color: #2196f3;
+}
+
+    .editBtn:hover {
+        background-color: #1e88e5;
+    }
+
+.deleteBtn {
+    background-color: #f44336;
+}
+
+    .deleteBtn:hover {
+        background-color: #e53935;
+    }
+
+.editForm {
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 8px;
+    max-width: 500px;
+}
+
+    .editForm h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .editForm label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .editForm input, .editForm select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .editForm .saveBtn, .editForm .cancelBtn {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+
+    .editForm .saveBtn {
+        background-color: #4caf50;
+        color: white;
+    }
+
+        .editForm .saveBtn:hover {
+            background-color: #45a049;
+        }
+
+    .editForm .cancelBtn {
+        background-color: #f44336;
+        color: white;
+    }
+
+        .editForm .cancelBtn:hover {
+            background-color: #e53935;
+        }

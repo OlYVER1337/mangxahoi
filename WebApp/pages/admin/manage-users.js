@@ -1,190 +1,181 @@
 ﻿import { useEffect, useState } from "react";
+import styles from "./ManageUsers.module.css";
+
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
-    // Lấy danh sách người dùng từ API
+    const roles = ["User", "Editor", "Admin"];
+    const availableActions = ["view_users", "edit_users", "edit_posts", "delete_posts"];
+
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch("/api/admin/users"); // Fetch API
-            if (!response.ok) {
-                throw new Error("Failed to fetch users.");
-            }
+            const response = await fetch("/api/admin/users");
+            if (!response.ok) throw new Error("Failed to fetch users.");
             const data = await response.json();
             setUsers(data);
         } catch (err) {
-            console.error("Lỗi khi lấy danh sách người dùng:", err);
-            setError("Không thể tải danh sách người dùng.");
+            console.error("Error:", err);
+            setError("Could not load users.");
         } finally {
             setLoading(false);
         }
     };
 
-    // Xóa người dùng
-    const handleDelete = async (userId) => {
-        const confirm = window.confirm("Bạn có chắc muốn xóa người dùng này?");
+    const handleSaveUser = async (user) => {
+        try {
+            const method = user.id ? "PUT" : "POST";
+            const response = await fetch(`/api/admin/users`, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(user),
+            });
+            if (!response.ok) throw new Error("Failed to save user.");
+            alert(user.id ? "User updated successfully!" : "User added successfully!");
+            setIsEditing(false);
+            setCurrentUser(null);
+            fetchUsers();
+        } catch (err) {
+            console.error("Error:", err);
+            alert("Failed to save user.");
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        const confirm = window.confirm("Are you sure you want to delete this user?");
         if (confirm) {
             try {
-                const response = await fetch("/api/admin/users", {
+                const response = await fetch(`/api/admin/users/${userId}`, {
                     method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ id: userId }),
                 });
-
-                if (!response.ok) {
-                    throw new Error("Failed to delete user.");
-                }
-
-                alert("Xóa người dùng thành công!");
-                fetchUsers(); // Refresh danh sách người dùng
+                if (!response.ok) throw new Error("Failed to delete user.");
+                alert("User deleted successfully!");
+                fetchUsers();
             } catch (err) {
-                console.error("Lỗi khi xóa người dùng:", err);
-                alert("Không thể xóa người dùng.");
+                console.error("Error:", err);
+                alert("Failed to delete user.");
             }
         }
     };
 
-    // Thêm vai trò mới
-    const handleAddRole = async (userId, newRole) => {
-        try {
-            const response = await fetch("/api/admin/users", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ id: userId, newRole }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to add role.");
-            }
-
-            alert("Thêm vai trò thành công!");
-            fetchUsers(); // Refresh danh sách người dùng
-        } catch (err) {
-            console.error("Lỗi khi thêm vai trò:", err);
-            alert("Không thể thêm vai trò.");
-        }
+    const handleEditUser = (user) => {
+        setIsEditing(true);
+        setCurrentUser(user || { name: "", email: "", role: "User", actions: [] });
     };
 
-    // Xóa vai trò
-    const handleRemoveRole = async (userId, roleToRemove) => {
-        try {
-            const response = await fetch("/api/admin/users", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ id: userId, removeRole: roleToRemove }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to remove role.");
-            }
-
-            alert("Xóa vai trò thành công!");
-            fetchUsers(); // Refresh danh sách người dùng
-        } catch (err) {
-            console.error("Lỗi khi xóa vai trò:", err);
-            alert("Không thể xóa vai trò.");
-        }
+    const handleCloseForm = () => {
+        setIsEditing(false);
+        setCurrentUser(null);
     };
 
     useEffect(() => {
         fetchUsers();
     }, []);
 
-    if (loading) return <p>Đang tải danh sách người dùng...</p>;
-    if (error) return <p>{error}</p>;
-
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-            <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Quản Lý Người Dùng</h1>
+        <div className={styles.manageUsersContainer}>
+            <h1 className={styles.title}>User Management</h1>
+            <button className={styles.addUserBtn} onClick={() => handleEditUser()}>Add User</button>
 
-            <table
-                border="1"
-                cellPadding="10"
-                style={{ width: "100%", marginTop: "20px", borderCollapse: "collapse" }}
-            >
+            {loading && <p className={styles.loading}>Loading users...</p>}
+            {error && <p className={styles.error}>{error}</p>}
+
+            <table className={styles.userTable}>
                 <thead>
-                    <tr style={{ backgroundColor: "#f4f4f4" }}>
+                    <tr>
                         <th>#</th>
-                        <th>Tên</th>
+                        <th>Name</th>
                         <th>Email</th>
-                        <th>Vai Trò</th>
-                        <th>Hành Động</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                        <th>Manage</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {users.length > 0 ? (
-                        users.map((user, index) => (
-                            <tr key={user.id} style={{ textAlign: "center" }}>
-                                <td>{index + 1}</td>
-                                <td>{user.name}</td>
-                                <td>{user.email}</td>
-                                <td>
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-                                        {(Array.isArray(user.role) ? user.role : []).map((role, idx) => (
-                                            <span
-                                                key={idx}
-                                                style={{
-                                                    padding: "5px 10px",
-                                                    backgroundColor: "#d9edf7",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                }}
-                                                onClick={() => handleRemoveRole(user.id, role)}
-                                            >
-                                                {role} ❌
-                                            </span>
-                                        ))}
-                                        <button
-                                            onClick={() => {
-                                                const newRole = prompt("Nhập vai trò mới:");
-                                                if (newRole) handleAddRole(user.id, newRole);
-                                            }}
-                                            style={{
-                                                padding: "5px",
-                                                border: "1px dashed #ddd",
-                                                borderRadius: "4px",
-                                                backgroundColor: "white",
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            ➕
-                                        </button>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <button
-                                        onClick={() => handleDelete(user.id)}
-                                        style={{
-                                            padding: "5px 10px",
-                                            backgroundColor: "#ff4d4d",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "4px",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        Xóa
-                                    </button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="5">Không có người dùng nào.</td>
+                    {users.map((user, idx) => (
+                        <tr key={user.id}>
+                            <td>{idx + 1}</td>
+                            <td>{user.name}</td>
+                            <td>{user.email}</td>
+                            <td>{user.role}</td>
+                            <td>{(user.actions || []).join(", ")}</td>
+                            <td>
+                                <button className={styles.editBtn} onClick={() => handleEditUser(user)}>Edit</button>
+                                <button className={styles.deleteBtn} onClick={() => handleDeleteUser(user.id)}>Delete</button>
+                            </td>
                         </tr>
-                    )}
+                    ))}
                 </tbody>
             </table>
+
+            {isEditing && (
+                <div className={styles.editForm}>
+                    <h2>{currentUser.id ? "Edit User" : "Add User"}</h2>
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSaveUser(currentUser);
+                        }}
+                    >
+                        <label>
+                            Name:
+                            <input
+                                type="text"
+                                value={currentUser.name}
+                                onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })}
+                                required
+                            />
+                        </label>
+                        <label>
+                            Email:
+                            <input
+                                type="email"
+                                value={currentUser.email}
+                                onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })}
+                                required
+                            />
+                        </label>
+                        <label>
+                            Role:
+                            <select
+                                value={currentUser.role}
+                                onChange={(e) => setCurrentUser({ ...currentUser, role: e.target.value })}
+                            >
+                                {roles.map((role) => (
+                                    <option key={role} value={role}>
+                                        {role}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label>
+                            Actions:
+                            {availableActions.map((action) => (
+                                <label key={action}>
+                                    <input
+                                        type="checkbox"
+                                        checked={currentUser.actions?.includes(action)}
+                                        onChange={(e) => {
+                                            const updatedActions = e.target.checked
+                                                ? [...(currentUser.actions || []), action]
+                                                : currentUser.actions.filter((a) => a !== action);
+                                            setCurrentUser({ ...currentUser, actions: updatedActions });
+                                        }}
+                                    />
+                                    {action}
+                                </label>
+                            ))}
+                        </label>
+                        <button type="submit" className={styles.saveBtn}>Save</button>
+                        <button type="button" className={styles.cancelBtn} onClick={handleCloseForm}>Cancel</button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 };
