@@ -28,10 +28,29 @@ const AdminDashboard = () => {
         setLoading(false);
     }, [router]);
 
-    const handleLogout = () => {
-        sessionStorage.removeItem("user");
-        router.push("/admin/login");
+    const handleLogout = async () => {
+        const user = sessionStorage.getItem("user");
+
+        if (user) {
+            const userData = JSON.parse(user);
+
+            // Gửi yêu cầu đến API để cập nhật availability = 0
+            await fetch("/api/admin/logout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email: userData.email }),
+            });
+
+            // Xóa thông tin người dùng khỏi sessionStorage
+            sessionStorage.removeItem("user");
+
+            // Chuyển hướng đến trang đăng nhập
+            router.push("/admin/login");
+        }
     };
+
 
     if (loading) {
         return <p>Đang tải...</p>;
