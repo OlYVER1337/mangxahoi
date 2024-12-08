@@ -21,7 +21,7 @@ export default async function handler(req, res) {
             const user = userDoc.data();
 
             // Kiểm tra mật khẩu và role
-            if (user.password === password && (user.role === "admin" || user.role === "editor")) {
+            if (user.password === password && (user.role === "Admin" || user.role === "Editor")) {
                 // Cập nhật availability = 1
                 const userRef = doc(db, "users", userDoc.id);
                 await updateDoc(userRef, { availability: 1 });
@@ -32,7 +32,8 @@ export default async function handler(req, res) {
                     role: user.role,
                     name: user.name,
                     email: user.email,
-                    image: user.image
+                    image: user.image,
+                    action: user.action,
                 });
             } else {
                 return res.status(403).json({

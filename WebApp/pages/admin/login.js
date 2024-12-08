@@ -28,7 +28,8 @@ const Login = () => {
                 name: data.name,
                 email: data.email,
                 role: data.role,
-                image: data.image
+                image: data.image,
+                action: data.action,
             }));
             router.push("/admin/dashboard");
         } else {

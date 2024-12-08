@@ -1,14 +1,14 @@
 ﻿import { useEffect, useState } from "react";
 import styles from "./ManageUsers.module.css";
-
-
+import { useRouter } from "next/router";
 const ManageUsers = () => {
+    const router = useRouter();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-
+    const [adminInfo, setAdminInfo] = useState(null);
     const roles = ["User", "Editor", "Admin"];
     const availableActions = ["view_users", "edit_users", "edit_posts", "delete_posts"];
 
@@ -73,9 +73,27 @@ const ManageUsers = () => {
         setCurrentUser(null);
     };
 
+
+
     useEffect(() => {
         fetchUsers();
-    }, []);
+        const user = sessionStorage.getItem("user");
+
+        if (!user) {
+            router.push("/admin/login");
+        } else {
+            const userData = JSON.parse(user);
+
+            if (userData.role !== "Admin" && userData.role !== "Editor") {
+                alert("Bạn không có quyền truy cập!");
+                router.push("/admin/login");
+            } else {
+                setAdminInfo(userData);
+            }
+        }
+
+        setLoading(false);
+    }, [router]);
 
     return (
         <div className={styles.manageUsersContainer}>
