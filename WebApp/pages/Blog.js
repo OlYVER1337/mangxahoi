@@ -29,23 +29,6 @@ const Blog = () => {
         }
     }, [session]);
 
-    const handleNameChange = async () => {
-        if (newName.trim() && newName !== session.user.name) {
-            await updateDoc(doc(db, "users", session.user.id), {
-                name: newName
-            });
-            // Update the session with the new name
-            await update({ user: { ...session.user, name: newName } });
-            setIsEditing(false);
-        }
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            handleNameChange();
-        }
-    };
-
     return (
         <main className="min-h-screen bg-gray-100">
             <Navbar />
