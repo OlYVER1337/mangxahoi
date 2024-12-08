@@ -1,60 +1,76 @@
 import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import Post from "../components/Post";
 import Navbar from "../components/Navbar";
 import RightSidebar from "../components/RightSidebar";
 import WhatsOnYourMind from "../components/WhatOnYourMind";
-import { collection, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
+import UserProfile from "../components/UserProfile";
 
 const Blog = () => {
-    const { data: session } = useSession();
+    const { data: session, update } = useSession(); // Add update function
     const [posts, setPosts] = useState([]);
-  
+
     useEffect(() => {
-      if (session) {
-        const q = query(
-          collection(db, "posts"),
-          where("userId", "==", session.user.id),
-          orderBy("postTimestamp", "desc")
-        );
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
-  
-        return () => unsubscribe();
-      } else {
-        setPosts([]);
-      }
+        if (session) {
+            const q = query(
+                collection(db, "posts"),
+                where("userId", "==", session.user.id),
+                orderBy("postTimestamp", "desc")
+            );
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            });
+
+            return () => unsubscribe();
+        } else {
+            setPosts([]);
+        }
     }, [session]);
-  
+
+    const handleNameChange = async () => {
+        if (newName.trim() && newName !== session.user.name) {
+            await updateDoc(doc(db, "users", session.user.id), {
+                name: newName
+            });
+            // Update the session with the new name
+            await update({ user: { ...session.user, name: newName } });
+            setIsEditing(false);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleNameChange();
+        }
+    };
+
     return (
-    <main>
-      <Navbar />
-      <RightSidebar />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-[600px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <img src={session?.user?.image} alt="dp" className="w-12 h-12 rounded-full" />
-              <h1 className="ml-4 text-xl font-semibold">{session?.user?.name}</h1>
-            </div>
-            <a href="EditProfile" className="bg-primary text-white py-2 px-4 rounded-lg mt-4">
-              Edit Profile
-            </a>
-          </div>
-        </div>
-        <div className="flex flex-col w-full max-w-[600px]">
-          <WhatsOnYourMind />
-        </div>
-        <div className="flex flex-col w-full max-w-[600px]">
-          {posts.map((post) => (
-                        <Post key={post.id} data={post} id={post.id} className="mb-4" />
-                    ))}
-                  </div>
+        <main className="min-h-screen bg-gray-100">
+            <Navbar />
+            <div className="flex justify-center gap-4 px-4 mt-4">
+                <div className="w-full max-w-[600px]">
+                    <UserProfile session={session} update={update} />
+                    <div className="mt-4">
+                        <WhatsOnYourMind />
+                    </div>
+                    <div className="mt-4 space-y-4">
+                        {posts.map((post) => (
+                            <Post 
+                                key={post.id} 
+                                data={post} 
+                                id={post.id}
+                            />
+                        ))}
+                    </div>
                 </div>
-                </main>
-  );
+                <div className="hidden lg:block">
+                    <RightSidebar />
+                </div>
+            </div>
+        </main>
+    );
 };
 
 export default Blog;

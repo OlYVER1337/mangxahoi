@@ -138,8 +138,29 @@ const Post = ({ data, id }) => {
             {/* Nội dung bài viết */}
             <p className="px-4 mt-[15px] text-gray-800 font-normal">{data.content}</p>
             {data.postImage && (
-                <div className="mt-[15px]">
-                    <img src={data.postImage} alt="post" />
+                <div className="mt-[15px] w-full">
+                    <div className="relative w-full aspect-auto">
+                        <img 
+                            src={data.postImage} 
+                            alt="post" 
+                            className="w-full h-auto max-h-[600px] object-cover mx-auto"
+                            onLoad={(e) => {
+                                // Tự động điều chỉnh kích thước container theo tỷ lệ ảnh
+                                const img = e.target;
+                                const aspectRatio = img.naturalWidth / img.naturalHeight;
+                                if (aspectRatio > 1) {
+                                    // Ảnh ngang
+                                    img.style.width = '100%';
+                                    img.style.height = 'auto';
+                                } else {
+                                    // Ảnh dọc
+                                    img.style.width = 'auto';
+                                    img.style.maxWidth = '100%';
+                                    img.style.height = 'auto';
+                                }
+                            }}
+                        />
+                    </div>
                 </div>
             )}
 
