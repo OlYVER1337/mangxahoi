@@ -120,6 +120,7 @@ public class Post implements Serializable {
         }
     }
     public boolean isLikedBy(String userId) {
+
         return likedBy != null && likedBy.contains(userId);
     }
 

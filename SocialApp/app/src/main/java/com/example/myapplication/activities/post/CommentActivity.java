@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.bumptech.glide.Glide;
 import com.example.myapplication.adapter.CommentAdapter;
 import com.example.myapplication.databinding.ActivityCommentBinding;
 import com.example.myapplication.models.Comment;
@@ -51,25 +52,31 @@ public class CommentActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            binding = ActivityCommentBinding.inflate(getLayoutInflater());
+            setContentView(binding.getRoot());
 
-        binding = ActivityCommentBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+            preferenceManager = new PreferenceManager(getApplicationContext());
+            database = FirebaseFirestore.getInstance();
 
-        preferenceManager = new PreferenceManager(getApplicationContext());
-        database = FirebaseFirestore.getInstance();
+            post = (Post) getIntent().getSerializableExtra("post");
+            if (post == null) {
+                Toast.makeText(this, "Error loading post", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
 
-        post = (Post) getIntent().getSerializableExtra("post");
-        if (post == null) {
-            Toast.makeText(this, "Error loading post", Toast.LENGTH_SHORT).show();
+            setupPostView();
+            setupCommentsList();
+            setListeners();
+            loadComments();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
-            return;
         }
-
-        setupPostView();
-        setupCommentsList();
-        setListeners();
-        loadComments();
     }
+
 
     private void setupPostView() {
 
@@ -83,14 +90,17 @@ public class CommentActivity extends AppCompatActivity {
             binding.layoutPost.textPostContent.setText(post.getContent());
         }
         if (post.getUserImage() != null) {
-            byte[] decodedString = Base64.decode(post.getUserImage(), Base64.DEFAULT);
-            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-            binding.layoutPost.imageProfile.setImageBitmap(decodedByte);
+            Glide.with(binding.layoutPost.imageProfile.getContext())
+                    .load(post.getUserImage())
+                    .circleCrop()
+                    .into(binding.layoutPost.imageProfile);
         }
 
         if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
             binding.layoutPost.imagePostContent.setVisibility(View.VISIBLE);
-            Picasso.get().load(post.getImageUrl()).into(binding.layoutPost.imagePostContent);
+            Glide.with(binding.layoutPost.imagePostContent.getContext())
+                    .load(post.getImageUrl())
+                    .into(binding.layoutPost.imagePostContent);
         } else {
             binding.layoutPost.imagePostContent.setVisibility(View.GONE);
         }

@@ -47,6 +47,15 @@
         android:backgroundTint="#FFFFFF" />
 
     <Button
+        android:id="@+id/buttonOpenMessenger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Messenger"
+        android:textColor="#000000"
+        android:backgroundTint="#FFFFFF" />
+
+    <Button
         android:id="@+id/buttonSignOut"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

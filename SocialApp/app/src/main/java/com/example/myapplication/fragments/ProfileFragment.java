@@ -1,6 +1,8 @@
 package com.example.myapplication.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -102,8 +104,28 @@ public class ProfileFragment extends Fragment {
             Intent intent = new Intent(getActivity(), UserInfoActivity.class);
             startActivity(intent);
         });
-
+        binding.buttonOpenMessenger.setOnClickListener(v -> openMessengerApp());
     }
+
+    private void openMessengerApp() {
+        try {
+            // Lấy email của người dùng hiện tại
+            String currentEmail = preferenceManager.getString(Constants.KEY_EMAIL);
+
+            // Mở MessengerApp với email
+            Intent intent = new Intent();
+            intent.setClassName("com.example.messengerapp",
+                    "com.example.messengerapp.activities.home.MainActivity");
+            intent.putExtra("userEmail", currentEmail);
+            intent.putExtra("autoLogin", true);
+            startActivity(intent);
+        } catch (Exception e) {
+            showToast("Không thể mở ứng dụng Messenger");
+        }
+    }
+
+
+
 
     private void signOut() {
         String userId = preferenceManager.getString(Constants.KEY_USER_ID);

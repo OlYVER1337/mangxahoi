@@ -284,7 +284,7 @@ public class FriendFragment extends Fragment implements FriendRequestAdapter.OnF
                     searchHandler.removeCallbacks(searchRunnable);
                 }
                 searchRunnable = () -> searchUsers(s.toString());
-                searchHandler.postDelayed(searchRunnable, 300); // Đợi 300ms sau khi người dùng ngừng gõ
+                searchHandler.postDelayed(searchRunnable, 500);
             }
 
             @Override

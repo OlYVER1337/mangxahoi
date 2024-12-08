@@ -351,7 +351,8 @@ public class HomeFragment extends Fragment implements PostAdapter.OnLikeClickLis
         post.setTimestamp(document.getTimestamp(Constants.KEY_POST_TIMESTAMP));
         post.setLikes(document.getLong("likes") != null ? document.getLong("likes").intValue() : 0);
         post.setLikedBy((List<String>) document.get("likedBy"));
-        post.setCommentCount(document.getLong("commentCount") != null ? document.getLong("commentCount").intValue() : 0);
+        post.setCommentCount(document.getLong("commentCount")
+                != null ? document.getLong("commentCount").intValue() : 0);
         return post;
     }
 

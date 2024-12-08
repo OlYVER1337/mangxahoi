@@ -69,21 +69,6 @@ public class Constants {
     // Other constants
     public static final String KEY_PASS_APP = "evuq hwod ratx duco";
     public static final String KEY_EMAIL_APP = "minh1234564567@gmail.com";
-    public static final String KEY_SHARED_PREF = "sharedPreferences";
-
-    public static HashMap<String, String> remoteMsgHeaders = null;
-    public static HashMap<String, String> getRemoteMsgHeaders() {
-        if (remoteMsgHeaders == null) {
-            remoteMsgHeaders = new HashMap<>();
-            remoteMsgHeaders.put(
-                    REMOTE_MSG_AUTHORIZATION,
-                    "key=AAAAeKmOK1Y:APA91bGxHvxBkDjjKTVvBHSYZBDFtZbTEVXDEUTzDMnYQFKVgCZEqMGGpZNlzJmZGRVLRBvWZRFzXXZCDWJGNMJOuZwxmWuKwNZrEzGvhMBVZwrBxvRxVXQmvVxwCqCBnQPHxGbHGMGt"
-            );
-            remoteMsgHeaders.put(
-                    REMOTE_MSG_CONTENT_TYPE,
-                    "application/json"
-            );
-        }
-        return remoteMsgHeaders;
-    }
+    public static final String KEY_AUTH_TOKEN = "auth_token";
+    ;
 }

@@ -1,4 +1,4 @@
-package com.example.myapplication.activities.account;
+package com.example.messengerapp.activities.account;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,11 +9,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.myapplication.R;
-import com.example.myapplication.activities.home.MainActivity;
-import com.example.myapplication.databinding.ActivitySignInBinding;
-import com.example.myapplication.utilities.Constants;
-import com.example.myapplication.utilities.PreferenceManager;
+import com.example.messengerapp.R;
+import com.example.messengerapp.activities.home.MainActivity;
+import com.example.messengerapp.databinding.ActivitySignInBinding;
+import com.example.messengerapp.utilities.Constants;
+import com.example.messengerapp.utilities.PreferenceManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -28,7 +28,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +47,7 @@ public class SignInActivity extends AppCompatActivity {
         preferenceManager = new PreferenceManager(getApplicationContext());
 
         // Kiểm tra nếu người dùng đã đăng nhập
-        if (preferenceManager.getBoolean(Constants.KEY_IS_SIGNED_IN)) {
+        if (preferenceManager.getBoolean(Constants.Key_IS_SIGNED_IN)) {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
             finish();
@@ -61,7 +60,9 @@ public class SignInActivity extends AppCompatActivity {
 
         configureGoogleSignIn();
         firebaseAuth = FirebaseAuth.getInstance();
+
     }
+
 
     private void configureGoogleSignIn() {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -107,7 +108,7 @@ public class SignInActivity extends AppCompatActivity {
 
     private void fetchUserDataFromFirestore(String userId) {
         FirebaseFirestore database = FirebaseFirestore.getInstance();
-        database.collection(Constants.KEY_COLLECTION_USERS)
+        database.collection(Constants.Key_COLLECTION_USER)
                 .document(userId)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -116,30 +117,30 @@ public class SignInActivity extends AppCompatActivity {
                         loading(false);
                         if (task.isSuccessful() && task.getResult() != null) {
                             DocumentSnapshot documentSnapshot = task.getResult();
-                            preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
-                            preferenceManager.putString(Constants.KEY_USER_ID, documentSnapshot.getId());
-                            preferenceManager.putString(Constants.KEY_NAME, documentSnapshot.getString(Constants.KEY_NAME));
-                            preferenceManager.putString(Constants.KEY_IMAGE, documentSnapshot.getString(Constants.KEY_IMAGE));
-                            preferenceManager.putString(Constants.KEY_EMAIL, documentSnapshot.getString(Constants.KEY_EMAIL));
-                            if (!documentSnapshot.contains(Constants.KEY_FRIEND_REQUEST_TIMESTAMPS)) {
-                                database.collection(Constants.KEY_COLLECTION_USERS)
+                            preferenceManager.putBoolean(Constants.Key_IS_SIGNED_IN, true);
+                            preferenceManager.putString(Constants.Key_USER_ID, documentSnapshot.getId());
+                            preferenceManager.putString(Constants.Key_NAME, documentSnapshot.getString(Constants.Key_NAME));
+                            preferenceManager.putString(Constants.Key_IMAGE, documentSnapshot.getString(Constants.Key_IMAGE));
+                            preferenceManager.putString(Constants.Key_EMAIL, documentSnapshot.getString(Constants.Key_EMAIL));
+                            if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUEST_TIMESTAMPS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
                                         .document(userId)
-                                        .update(Constants.KEY_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
+                                        .update(Constants.Key_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
                             }
-                            if (!documentSnapshot.contains(Constants.KEY_FRIENDS)) {
-                                database.collection(Constants.KEY_COLLECTION_USERS)
+                            if (!documentSnapshot.contains(Constants.Key_FRIENDS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
                                         .document(userId)
-                                        .update(Constants.KEY_FRIENDS, new ArrayList<String>());
+                                        .update(Constants.Key_FRIENDS, new ArrayList<String>());
                             }
-                            if (!documentSnapshot.contains(Constants.KEY_FRIEND_REQUESTS)) {
-                                database.collection(Constants.KEY_COLLECTION_USERS)
+                            if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUESTS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
                                         .document(userId)
-                                        .update(Constants.KEY_FRIEND_REQUESTS, new ArrayList<String>());
+                                        .update(Constants.Key_FRIEND_REQUESTS, new ArrayList<String>());
                             }
-                            if (!documentSnapshot.contains(Constants.KEY_SENT_FRIEND_REQUESTS)) {
-                                database.collection(Constants.KEY_COLLECTION_USERS)
+                            if (!documentSnapshot.contains(Constants.Key_SENT_FRIEND_REQUESTS)) {
+                                database.collection(Constants.Key_COLLECTION_USER)
                                         .document(userId)
-                                        .update(Constants.KEY_SENT_FRIEND_REQUESTS, new ArrayList<String>());
+                                        .update(Constants.Key_SENT_FRIEND_REQUESTS, new ArrayList<String>());
                             }
                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -193,70 +194,68 @@ public class SignInActivity extends AppCompatActivity {
 
     private void saveUserInfo(FirebaseUser user) {
         FirebaseFirestore database = FirebaseFirestore.getInstance();
-        database.collection(Constants.KEY_COLLECTION_USERS)
-                .whereEqualTo(Constants.KEY_EMAIL, user.getEmail())
+        database.collection(Constants.Key_COLLECTION_USER)
+                .whereEqualTo(Constants.Key_EMAIL, user.getEmail())
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
-                            DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
+                        DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
 
-                            // Kiểm tra và thêm các field mới nếu chưa có
-                            HashMap<String, Object> updates = new HashMap<>();
-                            if (!documentSnapshot.contains(Constants.KEY_FRIEND_REQUEST_TIMESTAMPS)) {
-                                updates.put(Constants.KEY_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
-                            }
-                            if (!documentSnapshot.contains(Constants.KEY_FRIENDS)) {
-                                updates.put(Constants.KEY_FRIENDS, new ArrayList<String>());
-                            }
-                            if (!documentSnapshot.contains(Constants.KEY_FRIEND_REQUESTS)) {
-                                updates.put(Constants.KEY_FRIEND_REQUESTS, new ArrayList<String>());
-                            }
-                            if (!documentSnapshot.contains(Constants.KEY_SENT_FRIEND_REQUESTS)) {
-                                updates.put(Constants.KEY_SENT_FRIEND_REQUESTS, new ArrayList<String>());
-                            }
-
-                            if (!updates.isEmpty()) {
-                                database.collection(Constants.KEY_COLLECTION_USERS)
-                                        .document(documentSnapshot.getId())
-                                        .update(updates);
-                            }
-
-                            preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
-                            preferenceManager.putString(Constants.KEY_USER_ID, documentSnapshot.getId());
-                            preferenceManager.putString(Constants.KEY_NAME, documentSnapshot.getString(Constants.KEY_NAME));
-                            preferenceManager.putString(Constants.KEY_IMAGE, documentSnapshot.getString(Constants.KEY_IMAGE));
-                            preferenceManager.putString(Constants.KEY_EMAIL, documentSnapshot.getString(Constants.KEY_EMAIL));
-                            navigateToMainActivity();
-                        } else {
-                            String photoUrl = user.getPhotoUrl() != null ?
-                                    user.getPhotoUrl().toString() :
-                                    "https://firebasestorage.googleapis.com/default_user_image.jpg"; // URL ảnh mặc định
-
-                            HashMap<String, Object> userMap = new HashMap<>();
-                            userMap.put(Constants.KEY_NAME, user.getDisplayName());
-                            userMap.put(Constants.KEY_EMAIL, user.getEmail());
-                            userMap.put(Constants.KEY_IMAGE, photoUrl);  // Lưu trực tiếp URL;
-                            userMap.put(Constants.KEY_FRIENDS, new ArrayList<String>());
-                            userMap.put(Constants.KEY_FRIEND_REQUESTS, new ArrayList<String>());
-                            userMap.put(Constants.KEY_SENT_FRIEND_REQUESTS, new ArrayList<String>());
-                            userMap.put(Constants.KEY_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
-
-                            database.collection(Constants.KEY_COLLECTION_USERS)
-                                    .add(userMap)
-                                    .addOnSuccessListener(documentReference -> {
-                                        preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
-                                        preferenceManager.putString(Constants.KEY_USER_ID, documentReference.getId());
-                                        preferenceManager.putString(Constants.KEY_NAME, user.getDisplayName());
-                                        preferenceManager.putString(Constants.KEY_IMAGE, photoUrl);
-                                        preferenceManager.putString(Constants.KEY_EMAIL, user.getEmail());
-                                        navigateToMainActivity();
-                                    });
+                        HashMap<String, Object> updates = new HashMap<>();
+                        if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUEST_TIMESTAMPS)) {
+                            updates.put(Constants.Key_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
                         }
+                        if (!documentSnapshot.contains(Constants.Key_FRIENDS)) {
+                            updates.put(Constants.Key_FRIENDS, new ArrayList<String>());
+                        }
+                        if (!documentSnapshot.contains(Constants.Key_FRIEND_REQUESTS)) {
+                            updates.put(Constants.Key_FRIEND_REQUESTS, new ArrayList<String>());
+                        }
+                        if (!documentSnapshot.contains(Constants.Key_SENT_FRIEND_REQUESTS)) {
+                            updates.put(Constants.Key_SENT_FRIEND_REQUESTS, new ArrayList<String>());
+                        }
+
+                        if (!updates.isEmpty()) {
+                            database.collection(Constants.Key_COLLECTION_USER)
+                                    .document(documentSnapshot.getId())
+                                    .update(updates);
+                        }
+
+                        preferenceManager.putBoolean(Constants.Key_IS_SIGNED_IN, true);
+                        preferenceManager.putString(Constants.Key_USER_ID, documentSnapshot.getId());
+                        preferenceManager.putString(Constants.Key_NAME, documentSnapshot.getString(Constants.Key_NAME));
+                        preferenceManager.putString(Constants.Key_IMAGE, documentSnapshot.getString(Constants.Key_IMAGE));
+                        preferenceManager.putString(Constants.Key_EMAIL, documentSnapshot.getString(Constants.Key_EMAIL));
+                        navigateToMainActivity();
+                    } else {
+                        // Sử dụng URL ảnh từ Google hoặc URL mặc định
+                        String photoUrl = user.getPhotoUrl() != null ?
+                                user.getPhotoUrl().toString() :
+                                "https://firebasestorage.googleapis.com/default_user_image.jpg";
+
+                        HashMap<String, Object> userMap = new HashMap<>();
+                        userMap.put(Constants.Key_NAME, user.getDisplayName());
+                        userMap.put(Constants.Key_EMAIL, user.getEmail());
+                        userMap.put(Constants.Key_IMAGE, photoUrl);
+                        userMap.put(Constants.Key_FRIENDS, new ArrayList<String>());
+                        userMap.put(Constants.Key_FRIEND_REQUESTS, new ArrayList<String>());
+                        userMap.put(Constants.Key_SENT_FRIEND_REQUESTS, new ArrayList<String>());
+                        userMap.put(Constants.Key_FRIEND_REQUEST_TIMESTAMPS, new HashMap<String, com.google.firebase.Timestamp>());
+
+                        database.collection(Constants.Key_COLLECTION_USER)
+                                .add(userMap)
+                                .addOnSuccessListener(documentReference -> {
+                                    preferenceManager.putBoolean(Constants.Key_IS_SIGNED_IN, true);
+                                    preferenceManager.putString(Constants.Key_USER_ID, documentReference.getId());
+                                    preferenceManager.putString(Constants.Key_NAME, user.getDisplayName());
+                                    preferenceManager.putString(Constants.Key_IMAGE, photoUrl);
+                                    preferenceManager.putString(Constants.Key_EMAIL, user.getEmail());
+                                    navigateToMainActivity();
+                                });
                     }
                 });
     }
+
 
     private void navigateToMainActivity() {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
