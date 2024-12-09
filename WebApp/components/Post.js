@@ -18,9 +18,11 @@ import {
     onSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { useUser } from './UserContext'; // Import useUser
 
 const Post = ({ data, id }) => {
     const { data: session } = useSession();
+    const { user } = useUser(); // Lấy thông tin người dùng từ context
 
     // State quản lý
     const [likeBy, setLikeBy] = useState(data.likedBy || []);
@@ -108,7 +110,7 @@ const Post = ({ data, id }) => {
                         alt="dp"
                     />
                     <div>
-                        <h1 className="text-[16px] font-semibold">{data.userName}</h1>
+                        <h1 className="text-[16px] font-semibold">{data.userName || user.name}</h1>
                         <div className="text-gray-500 flex items-center gap-2">
                             <p>
                                 {data.postTimestamp
@@ -200,7 +202,7 @@ const Post = ({ data, id }) => {
                                 className="w-8 h-8 rounded-full"
                             />
                             <div>
-                                <p className="font-semibold">{comment.userName}</p>
+                                <p className="font-semibold">{comment.userName || user.name}</p>
                                 <p>{comment.content}</p>
                             </div>
                         </div>

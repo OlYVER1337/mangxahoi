@@ -53,6 +53,7 @@ export const authOptions = {
                 token.name = user.name;
                 token.email = user.email;
                 token.image = user.image || null;
+                token.bio = user.bio || null;
             }
             return token;
         },
@@ -63,6 +64,7 @@ export const authOptions = {
                 name: token.name,
                 email: token.email,
                 image: token.image,
+                bio: token.bio,
             };
             return session;
         },

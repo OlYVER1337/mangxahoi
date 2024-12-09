@@ -44,6 +44,7 @@ const Blog = () => {
                                 key={post.id} 
                                 data={post} 
                                 id={post.id}
+                                userName={session.user.name}
                             />
                         ))}
                     </div>

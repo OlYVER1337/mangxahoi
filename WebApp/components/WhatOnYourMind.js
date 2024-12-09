@@ -11,20 +11,20 @@ import { db, storage } from "../firebase";
 import { getDownloadURL, ref, uploadString } from "firebase/storage";
 
 const WhatsOnYourMind = () => {
-    const [input, setInput] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [input, setInput] = useState(""); // Lưu nội dung text
+    const [loading, setLoading] = useState(false); // Trạng thái loading
+    const [selectedFile, setSelectedFile] = useState(null); // Lưu file ảnh đã chọn
     const fPicker = useRef(null);
     const { data: session } = useSession();
 
     const addImageToPost = (e) => {
         const reader = new FileReader();
-        if (e.target.files[0]) {
-            reader.readAsDataURL(e.target.files[0]);
+        if (e.target.files[0]) { // e.target.files[0] là file đầu tiên được chọn
+            reader.readAsDataURL(e.target.files[0]); // Đọc file và chuyển đổi thành dạng base64 URL
         }
 
-        reader.onload = (readerEvent) => {
-            setSelectedFile(readerEvent.target.result);
+        reader.onload = (readerEvent) => {    // Khi quá trình đọc file hoàn tất
+            setSelectedFile(readerEvent.target.result);        // Lưu base64 string vào state selectedFile
         };
     };
 
@@ -32,7 +32,7 @@ const WhatsOnYourMind = () => {
         if (loading) return;
 
         setLoading(true);
-
+    // Thêm bài viết vào Firestore
         const docRef = await addDoc(collection(db, "posts"), {
             userId: session.user.id,
             userName: session.user.name,
@@ -44,7 +44,7 @@ const WhatsOnYourMind = () => {
         });
 
         const imageRef = ref(storage, `posts/${docRef.id}/Image`);
-
+    // Upload ảnh lên Firebase Storage nếu có
         if (selectedFile) {
             await uploadString(imageRef, selectedFile, "data_url").then(async () => {
                 const downloadURL = await getDownloadURL(imageRef);
