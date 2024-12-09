@@ -75,25 +75,34 @@ const ManageUsers = () => {
 
 
 
+
     useEffect(() => {
-        fetchUsers();
-        const user = sessionStorage.getItem("user");
-
-        if (!user) {
-            router.push("/admin/login");
-        } else {
-            const userData = JSON.parse(user);
-
-            if (userData.role !== "Admin" && userData.role !== "Editor") {
-                alert("Bạn không có quyền truy cập!");
+        const checkAccess = () => {
+            const user = localStorage.getItem("user");
+            if (!user) {
                 router.push("/admin/login");
             } else {
-                setAdminInfo(userData);
-            }
-        }
+                const userData = JSON.parse(user);
 
-        setLoading(false);
+                if (userData.role !== "Admin" && userData.role !== "Editor") {
+                    alert("Bạn không có quyền truy cập!");
+                    router.push("/admin/login");
+                } else {
+                    setAdminInfo(userData);
+                }
+            }
+
+            setLoading(false);
+        };
+
+        checkAccess();
     }, [router]);
+
+    useEffect(() => {
+        if (adminInfo) {
+            fetchPosts();
+        }
+    }, [adminInfo]);
 
     return (
         <div className={styles.manageUsersContainer}>

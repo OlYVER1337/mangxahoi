@@ -1,102 +1,162 @@
 ﻿import { db } from "../../../firebase";
-import { getDocs, query, where, collection, doc, updateDoc, deleteDoc, orderBy } from "firebase/firestore";
+import {
+    collection,
+    doc,
+    getDocs,
+    getDoc,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    orderBy,
+} from "firebase/firestore";
 
 export default async function handler(req, res) {
-    const { method } = req;
-
     try {
-        if (method === "GET") {
-            // Lấy danh sách bài viết
-            const postsRef = collection(db, "posts");
-            const q = query(postsRef, orderBy("postTimestamp", "desc"));
-            const snapshot = await getDocs(q);
+        const postsRef = collection(db, "posts");
 
-            const posts = snapshot.docs.map((doc) => ({
+        // Handle GET posts
+        if (req.method === "GET" && !req.query.action) {
+            const querySnapshot = await getDocs(query(postsRef, orderBy("postTimestamp", "desc")));
+            const posts = querySnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             }));
+            return res.status(200).json(posts);
+        }
 
-            res.status(200).json(posts);
-
-        } else if (method === "POST") {
-            // Thêm bài viết mới
+        // Handle POST a new post
+        if (req.method === "POST") {
             const { content, postImage, userId, userName, userImage } = req.body;
 
             if (!content || !userId || !userName || !userImage) {
-                return res.status(400).json({ error: "Missing required fields." });
+                return res.status(400).json({
+                    message: "Content, userId, userName, and userImage are required.",
+                });
             }
 
             const newPost = {
                 content,
-                postImage: postImage || null,
+                postImage: postImage || "",
                 userId,
                 userName,
                 userImage,
-                postTimestamp: new Date(),
                 likedBy: [],
-                comments: [],
+                postTimestamp: new Date(),
             };
 
-            const docRef = await db.collection("posts").add(newPost);
+            const docRef = await addDoc(postsRef, newPost);
+            return res.status(201).json({ id: docRef.id, ...newPost });
+        }
 
-            res.status(201).json({ message: "Post added successfully.", id: docRef.id });
-
-        } else if (method === "PUT") {
-            // Chỉnh sửa bài viết
+        // Handle PUT (update post)
+        if (req.method === "PUT") {
             const { id, content, postImage } = req.body;
 
             if (!id || !content) {
-                return res.status(400).json({ error: "Missing required fields." });
+                return res.status(400).json({
+                    message: "Post ID and updated content are required.",
+                });
             }
 
-            const postRef = doc(db, "posts", id);
-            await updateDoc(postRef, {
+            const postDoc = doc(postsRef, id);
+            await updateDoc(postDoc, {
                 content,
-                postImage: postImage || null,
-                postTimestamp: new Date(), // Cập nhật lại thời gian chỉnh sửa
+                postImage: postImage || "",
+                postTimestamp: new Date(),
             });
 
-            res.status(200).json({ message: "Post updated successfully." });
+            return res.status(200).json({ message: "Post updated successfully." });
+        }
 
-        } else if (method === "DELETE") {
-            const { id, commentId } = req.body;
+        // Handle DELETE (delete post)
+        if (req.method === "DELETE") {
+            const { id } = req.body;
 
             if (!id) {
-                return res.status(400).json({ error: "Missing post ID." });
+                return res.status(400).json({
+                    message: "Post ID is required.",
+                });
             }
 
-            if (commentId) {
-                // Xóa một bình luận trong sub-collection "comments"
-                const postRef = doc(db, "posts", id);
-                const commentRef = doc(postRef, "comments", commentId);
+            const postDoc = doc(postsRef, id);
+            await deleteDoc(postDoc);
 
-                // Kiểm tra xem bình luận có tồn tại không
-                const commentSnapshot = await getDocs(commentRef);
-                if (!commentSnapshot.exists) {
-                    return res.status(404).json({ error: "Comment not found." });
+            return res.status(200).json({ message: "Post deleted successfully." });
+        }
+
+        // Handle comments API
+        if (req.query.action === "comments") {
+            const { postId } = req.query;
+
+            if (!postId) {
+                return res.status(400).json({ message: "Post ID is required for comments." });
+            }
+
+            const commentsRef = collection(db, `posts/${postId}/comments`);
+
+            if (req.method === "GET") {
+                // Fetch comments for a specific post
+                const querySnapshot = await getDocs(query(commentsRef, orderBy("timestamp", "desc")));
+                const comments = querySnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                return res.status(200).json(comments);
+            }
+
+            if (req.method === "POST") {
+                const { userId, userName, content } = req.body;
+
+                if (!userId || !userName || !content) {
+                    return res.status(400).json({ message: "Missing required comment fields." });
                 }
 
-                await deleteDoc(commentRef);
-                return res.status(200).json({ message: "Comment deleted successfully." });
-            } else {
-                // Xóa bài viết và tất cả bình luận (nếu không có commentId)
-                const postRef = doc(db, "posts", id);
+                const newComment = {
+                    userId,
+                    userName,
+                    content,
+                    timestamp: new Date(),
+                };
 
-                // Xóa bài viết
-                await deleteDoc(postRef);
-
-                // Xóa tất cả các bình luận liên quan trong sub-collection
-                const commentsRef = collection(postRef, "comments");
-                const commentsSnapshot = await getDocs(commentsRef);
-                commentsSnapshot.forEach((doc) => deleteDoc(doc.ref));
-
-                res.status(200).json({ message: "Post deleted successfully." });
+                const docRef = await addDoc(commentsRef, newComment);
+                return res.status(201).json({ id: docRef.id, ...newComment });
             }
-        } else {
-            res.status(405).json({ error: "Method not allowed." });
+
+            if (req.method === "PUT") {
+                const { commentId, content } = req.body;
+
+                if (!commentId || !content) {
+                    return res.status(400).json({ message: "Comment ID and updated content are required." });
+                }
+
+                const commentDoc = doc(commentsRef, commentId);
+                await updateDoc(commentDoc, {
+                    content,
+                    timestamp: new Date(),
+                });
+
+                return res.status(200).json({ message: "Comment updated successfully." });
+            }
+
+            if (req.method === "DELETE") {
+                const { commentId } = req.body;
+
+                if (!commentId) {
+                    return res.status(400).json({ message: "Comment ID is required." });
+                }
+
+                const commentDoc = doc(commentsRef, commentId);
+                await deleteDoc(commentDoc);
+
+                return res.status(200).json({ message: "Comment deleted successfully." });
+            }
         }
+
+        res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
+        res.status(405).end(`Method ${req.method} Not Allowed`);
     } catch (error) {
-        console.error("Error handling posts:", error);
-        res.status(500).json({ error: "An error occurred." });
+        console.error("Error managing posts/comments:", error);
+        res.status(500).json({ message: "Internal server error." });
     }
 }
