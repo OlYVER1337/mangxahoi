@@ -37,6 +37,43 @@ const Messenger = () => {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     };
+    // Lấy danh sách bạn bè
+    useEffect(() => {
+        const fetchFriends = async () => {
+            if (session?.user?.email) {
+                try {
+                    const userId = await getUserIdByEmail(session.user.email);
+                    const response = await fetch(`http://localhost:5000/api/friends?userId=${userId}`);
+                    const data = await response.json();
+                    setFriends(data);
+                } catch (error) {
+                    console.error('Lỗi khi lấy danh sách bạn bè:', error);
+                }
+            }
+        };
+
+        fetchFriends();
+    }, [session?.user?.email]);
+
+    // Hàm tạo cuộc trò chuyện mới
+    const handleCreateConversation = async () => {
+        if (!newChatUserId || newChatUserId === currentUserId) return;
+
+        try {
+            // Thêm cuộc hội thoại mới vào Firestore
+            const newConversation = {
+                senderID: currentUserId,
+                receiverID: newChatUserId,
+                lastMessage: '',
+                lastUpdated: serverTimestamp(),
+            };
+
+            await addDoc(collection(db, 'conversations'), newConversation);
+            setNewChatUserId('');
+        } catch (error) {
+            console.error('Lỗi khi tạo cuộc trò chuyện mới:', error);
+        }
+    };
 
     // Lấy danh sách cuộc hội thoại
     useEffect(() => {
@@ -100,7 +137,6 @@ const Messenger = () => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
-
         const messageData = {
             senderID: currentUserId,
             receiverID: selectedUserId,
@@ -108,16 +144,13 @@ const Messenger = () => {
             timestamp: serverTimestamp(),
             type: 'text',
         };
-
         try {
             await addDoc(collection(db, 'chat'), messageData);
-
             const conversationDoc = conversations.find(
                 (c) =>
                     (c.senderID === currentUserId && c.receiverID === selectedUserId) ||
                     (c.receiverID === currentUserId && c.senderID === selectedUserId)
             );
-
             if (conversationDoc?.id) {
                 const conversationRef = doc(db, 'conversations', conversationDoc.id);
                 await updateDoc(conversationRef, {
@@ -125,7 +158,6 @@ const Messenger = () => {
                     lastUpdated: serverTimestamp(),
                 });
             }
-
             setNewMessage('');
         } catch (error) {
             console.error('Lỗi khi gửi tin nhắn hoặc cập nhật lastMessage:', error);

@@ -28,7 +28,6 @@ export const authOptions = {
                             password: credentials.password,
                         }),
                     });
-
                     const user = await res.json();
                     if (res.ok && user) {
                         return {
@@ -49,11 +48,9 @@ export const authOptions = {
         async jwt({ token, user, account }) {
             if (account?.provider === "google" && user) {
                 const usersRef = collection(db, "users");
-
                 // Kiểm tra người dùng đã tồn tại chưa
                 const q = query(usersRef, where("email", "==", user.email));
                 const querySnapshot = await getDocs(q);
-
                 if (querySnapshot.empty) {
                     // Thêm mới người dùng nếu chưa tồn tại
                     const docRef = await addDoc(usersRef, {
@@ -68,7 +65,6 @@ export const authOptions = {
                     const existingUser = querySnapshot.docs[0];
                     token.id = existingUser.id; // Lấy docId của người dùng đã tồn tại
                 }
-
                 // Ghi thông tin từ Google vào token
                 token.name = user.name;
                 token.email = user.email;
@@ -78,7 +74,6 @@ export const authOptions = {
                 const usersRef = collection(db, "users");
                 const q = query(usersRef, where("email", "==", token.email));
                 const querySnapshot = await getDocs(q);
-
                 if (!querySnapshot.empty) {
                     const userDoc = querySnapshot.docs[0].data();
                     token.name = userDoc.name;

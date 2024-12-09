@@ -87,6 +87,53 @@ app.get('/api/conversations', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch conversations.' });
     }
 });
+app.get('/api/friends', async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        // Lấy dữ liệu user từ Firestore
+        const userDocRef = doc(db, 'users', userId);
+        const userSnapshot = await getDoc(userDocRef);
+
+        if (!userSnapshot.exists()) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userData = userSnapshot.data();
+
+        // Kiểm tra xem user có danh sách bạn bè không
+        if (!userData.friends || userData.friends.length === 0) {
+            return res.json({ friends: [] }); // Không có bạn bè
+        }
+
+        // Lấy danh sách bạn bè
+        const friendsPromises = userData.friends.map(async (friendId) => {
+            const friendDocRef = doc(db, 'users', friendId);
+            const friendSnapshot = await getDoc(friendDocRef);
+            if (friendSnapshot.exists()) {
+                const friendData = friendSnapshot.data();
+                return {
+                    id: friendId,
+                    name: friendData.name,
+                    email: friendData.email,
+                    image: friendData.image,
+                    availability: friendData.availability,
+                };
+            }
+            return null; // Nếu user không tồn tại
+        });
+
+        const friendsDetails = await Promise.all(friendsPromises);
+
+        // Loại bỏ những user null (không tồn tại)
+        const validFriends = friendsDetails.filter((friend) => friend !== null);
+
+        return res.json({ friends: validFriends });
+    } catch (error) {
+        console.error('Error fetching friends:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 app.post('/api/getMessages', async (req, res) => {
     try {

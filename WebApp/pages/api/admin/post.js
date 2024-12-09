@@ -34,7 +34,6 @@ export default async function handler(req, res) {
                     message: "Content, userId, userName, and userImage are required.",
                 });
             }
-
             const newPost = {
                 content,
                 postImage: postImage || "",
@@ -44,11 +43,9 @@ export default async function handler(req, res) {
                 likedBy: [],
                 postTimestamp: new Date(),
             };
-
             const docRef = await addDoc(postsRef, newPost);
             return res.status(201).json({ id: docRef.id, ...newPost });
         }
-
         // Handle PUT (update post)
         if (req.method === "PUT") {
             const { id, content, postImage } = req.body;
@@ -58,33 +55,26 @@ export default async function handler(req, res) {
                     message: "Post ID and updated content are required.",
                 });
             }
-
             const postDoc = doc(postsRef, id);
             await updateDoc(postDoc, {
                 content,
                 postImage: postImage || "",
                 postTimestamp: new Date(),
             });
-
             return res.status(200).json({ message: "Post updated successfully." });
         }
-
         // Handle DELETE (delete post)
         if (req.method === "DELETE") {
             const { id } = req.body;
-
             if (!id) {
                 return res.status(400).json({
                     message: "Post ID is required.",
-                });
-            }
-
+                });        }
             const postDoc = doc(postsRef, id);
             await deleteDoc(postDoc);
 
             return res.status(200).json({ message: "Post deleted successfully." });
         }
-
         // Handle comments API
         if (req.query.action === "comments") {
             const { postId } = req.query;
