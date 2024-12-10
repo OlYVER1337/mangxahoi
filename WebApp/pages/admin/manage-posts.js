@@ -1,22 +1,25 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useEffect, useState } from "react";
 import styles from "./ManagePosts.module.css";
+import { useRouter } from "next/router";
 
-const ManagePosts = ({ currentUser }) => {
+const ManagePosts = () => {
+    const router = useRouter();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [isEditing, setIsEditing] = useState(false);
     const [editingPost, setEditingPost] = useState(null);
-    const [selectedComments, setSelectedComments] = useState([]); // State for comments
-    const [selectedPostId, setSelectedPostId] = useState(null); // State for the selected post
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePostId, setDeletePostId] = useState(null);
+    const [selectedPostId, setSelectedPostId] = useState(null);
+    const [selectedComments, setSelectedComments] = useState([]);
 
-    const hasEditPermission =
-        currentUser?.role === "Admin" || currentUser?.actions?.includes("edit_posts");
 
+    // Fetch danh sách bài viết từ backend
     const fetchPosts = async () => {
         try {
             setLoading(true);
-            const response = await fetch("/api/admin/post");
+            const response = await fetch("/api/admin/posts");
             if (!response.ok) throw new Error("Failed to fetch posts.");
             const data = await response.json();
             setPosts(data);
@@ -27,61 +30,50 @@ const ManagePosts = ({ currentUser }) => {
             setLoading(false);
         }
     };
-
-    const fetchComments = async (postId) => {
-        try {
-            const response = await fetch(`/api/admin/post?action=comments&postId=${postId}`);
-            if (!response.ok) {
-                throw new Error("Failed to fetch comments.");
-            }
-            const comments = await response.json();
-            return comments;
-        } catch (error) {
-            console.error("Error fetching comments:", error);
-            return [];
-        }
-    };
-
     const handlePostClick = async (postId) => {
         setSelectedPostId(postId);
-        const comments = await fetchComments(postId);
+        const response = await fetch(`/api/admin/posts?action=comments&postId=${postId}`);
+        const comments = await response.json();
         setSelectedComments(comments);
     };
-
-    const handleSavePost = async (post) => {
+    // Xóa bài viết từ backend
+    const handleDeletePost = async (postId) => {
         try {
-            const method = post.id ? "PUT" : "POST";
-            const response = await fetch(`/api/admin/post`, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(post),
+            console.log("Attempting to delete post with ID:", postId);
+
+            const response = await fetch("/api/admin/posts", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: postId.toString() }),
             });
-            if (!response.ok) throw new Error("Failed to save post.");
-            alert(post.id ? "Post updated successfully!" : "Post added successfully!");
-            setIsEditing(false);
-            setEditingPost(null);
-            fetchPosts();
-        } catch (err) {
-            console.error("Error:", err);
-            alert("Failed to save post.");
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message);
+            }
+
+            const data = await response.json();
+            alert(data.message);
+
+            // Cập nhật danh sách bài viết sau khi xóa thành công
+            setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+            setShowDeleteModal(false); // Ẩn modal sau khi xóa thành công
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Failed to delete post.");
         }
     };
 
-    const handleDeletePost = async (postId) => {
-        const confirm = window.confirm("Are you sure you want to delete this post?");
-        if (confirm) {
-            try {
-                const response = await fetch(`/api/admin/posts/${postId}`, {
-                    method: "DELETE",
-                });
-                if (!response.ok) throw new Error("Failed to delete post.");
-                alert("Post deleted successfully!");
-                fetchPosts();
-            } catch (err) {
-                console.error("Error:", err);
-                alert("Failed to delete post.");
-            }
-        }
+    // Hiện modal xác nhận delete
+    const confirmDelete = (postId) => {
+        setDeletePostId(postId);
+        setShowDeleteModal(true);
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteModal(false);
     };
 
     useEffect(() => {
@@ -90,8 +82,7 @@ const ManagePosts = ({ currentUser }) => {
 
     return (
         <div className={styles["manage-posts-container"]}>
-            <h1 className={styles.title}>Post Management</h1>
-
+            <h1 className={styles.title}>Manage Posts</h1>
             {loading && <p className={styles.loading}>Loading posts...</p>}
             {error && <p className={styles.error}>{error}</p>}
 
@@ -101,61 +92,56 @@ const ManagePosts = ({ currentUser }) => {
                         <th>#</th>
                         <th>Content</th>
                         <th>Image</th>
-                        <th>Posted By</th>
+                        <th>Author</th>
                         <th>Timestamp</th>
-                        {hasEditPermission && <th>Manage</th>}
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {posts.map((post, idx) => (
+                    {posts.map((post, index) => (
                         <tr
                             key={post.id}
                             onClick={() => handlePostClick(post.id)}
                             className={styles["clickable-row"]}
                         >
-                            <td>{idx + 1}</td>
+                            <td>{index + 1}</td>
                             <td>{post.content}</td>
                             <td>
-                                {post.postImage ? (
-                                    <img
-                                        src={post.postImage}
-                                        alt="Post"
-                                        className={styles["post-image"]}
-                                    />
-                                ) : (
-                                    "No Image"
+                                {post.postImage && (
+                                    <img src={post.postImage} alt="Post" className={styles["post-image"]} />
                                 )}
                             </td>
                             <td>{post.userName}</td>
-                            <td>
-                                {post.postTimestamp
-                                    ? new Date(post.postTimestamp.seconds * 1000 + post.postTimestamp.nanoseconds / 1e6).toLocaleString()
-                                    : "Unknown Time"}
+                            <td className={styles.timestamp}>
+                                {new Date(post.postTimestamp).toLocaleString()}
                             </td>
-                            {hasEditPermission && (
-                                <td>
-                                    <button
-                                        className={styles["edit-btn"]}
-                                        onClick={() => console.log("Edit Clicked")}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        className={styles["delete-btn"]}
-                                        onClick={() => handleDeletePost(post.id)}
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
-                            )}
+                            <td>
+                                <button onClick={() => confirmDelete(post.id)} className={styles["delete-btn"]}>
+                                    Delete
+                                </button>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
+            {showDeleteModal && (
+                <div className={styles.modal}>
+                    <div className={styles["modal-content"]}>
+                        <p>Are you sure you want to delete this post?</p>
+                        <button onClick={() => handleDeletePost(deletePostId)} className={styles["edit-btn"]}>
+                            Confirm
+                        </button>
+                        <button onClick={handleCancelDelete} className={styles["delete-btn"]}>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {selectedPostId && (
                 <div className={styles["comments-section"]}>
-                    <h2>Comments for Post {selectedPostId}</h2>
+                    <h2>Bình luận cho bài viết {selectedPostId}</h2>
                     {selectedComments.length > 0 ? (
                         <ul className={styles["comments-list"]}>
                             {selectedComments.map((comment) => (
@@ -166,15 +152,16 @@ const ManagePosts = ({ currentUser }) => {
                                     <span className={styles["timestamp"]}>
                                         {comment.timestamp
                                             ? new Date(
-                                                comment.timestamp.seconds * 1000 + comment.timestamp.nanoseconds / 1e6
+                                                comment.timestamp.seconds * 1000 +
+                                                (comment.timestamp.nanoseconds || 0) / 1e6
                                             ).toLocaleString()
-                                            : "Unknown Time"}
+                                            : "Không xác định"}
                                     </span>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p>No comments found for this post.</p>
+                        <p>Không tìm thấy bình luận cho bài viết này.</p>
                     )}
                 </div>
             )}

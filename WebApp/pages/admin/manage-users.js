@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import styles from "./ManageUsers.module.css";
 import { useRouter } from "next/router";
+
 const ManageUsers = () => {
     const router = useRouter();
     const [users, setUsers] = useState([]);
@@ -8,6 +9,8 @@ const ManageUsers = () => {
     const [error, setError] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteUserId, setDeleteUserId] = useState(null);
     const [adminInfo, setAdminInfo] = useState(null);
     const roles = ["User", "Editor", "Admin"];
     const availableActions = ["view_users", "edit_users", "edit_posts", "delete_posts"];
@@ -36,36 +39,58 @@ const ManageUsers = () => {
                 body: JSON.stringify(user),
             });
             if (!response.ok) throw new Error("Failed to save user.");
+            const savedUser = await response.json();
             alert(user.id ? "User updated successfully!" : "User added successfully!");
+            if (method === "PUT") {
+                setUsers((prev) => prev.map((u) => (u.id === savedUser.id ? savedUser : u)));
+            } else {
+                setUsers((prev) => [...prev, savedUser]);
+            }
             setIsEditing(false);
             setCurrentUser(null);
-            fetchUsers();
         } catch (err) {
             console.error("Error:", err);
             alert("Failed to save user.");
         }
     };
 
-    const handleDeleteUser = async (userId) => {
-        const confirm = window.confirm("Are you sure you want to delete this user?");
-        if (confirm) {
-            try {
-                const response = await fetch(`/api/admin/users/${userId}`, {
-                    method: "DELETE",
-                });
-                if (!response.ok) throw new Error("Failed to delete user.");
-                alert("User deleted successfully!");
-                fetchUsers();
-            } catch (err) {
-                console.error("Error:", err);
-                alert("Failed to delete user.");
-            }
+    const confirmDelete = (userId) => {
+        setDeleteUserId(userId);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteUser = async () => {
+        try {
+            const response = await fetch(`/api/admin/users`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: deleteUserId }), // Gửi ID trong body
+            });
+
+            if (!response.ok) throw new Error("Failed to delete user.");
+            alert("User deleted successfully!");
+            setUsers((prev) => prev.filter((user) => user.id !== deleteUserId));
+        } catch (err) {
+            console.error("Error:", err);
+            alert("Failed to delete user.");
+        } finally {
+            setShowDeleteModal(false);
+            setDeleteUserId(null);
         }
     };
 
+
     const handleEditUser = (user) => {
         setIsEditing(true);
-        setCurrentUser(user || { name: "", email: "", role: "User", actions: [] });
+        setCurrentUser({
+            id: user.id || null,
+            name: user.name || "",
+            email: user.email || "",
+            role: user.role || "User",
+            actions: user.actions || [],
+        });
     };
 
     const handleCloseForm = () => {
@@ -73,17 +98,13 @@ const ManageUsers = () => {
         setCurrentUser(null);
     };
 
-
-
     useEffect(() => {
         fetchUsers();
         const user = sessionStorage.getItem("user");
-
         if (!user) {
             router.push("/admin/login");
         } else {
             const userData = JSON.parse(user);
-
             if (userData.role !== "Admin" && userData.role !== "Editor") {
                 alert("Bạn không có quyền truy cập!");
                 router.push("/admin/login");
@@ -91,7 +112,6 @@ const ManageUsers = () => {
                 setAdminInfo(userData);
             }
         }
-
         setLoading(false);
     }, [router]);
 
@@ -124,7 +144,7 @@ const ManageUsers = () => {
                             <td>{(user.actions || []).join(", ")}</td>
                             <td>
                                 <button className={styles.editBtn} onClick={() => handleEditUser(user)}>Edit</button>
-                                <button className={styles.deleteBtn} onClick={() => handleDeleteUser(user.id)}>Delete</button>
+                                <button className={styles.deleteBtn} onClick={() => confirmDelete(user.id)}>Delete</button>
                             </td>
                         </tr>
                     ))}
@@ -192,6 +212,14 @@ const ManageUsers = () => {
                         <button type="submit" className={styles.saveBtn}>Save</button>
                         <button type="button" className={styles.cancelBtn} onClick={handleCloseForm}>Cancel</button>
                     </form>
+                </div>
+            )}
+
+            {showDeleteModal && (
+                <div className={styles.modal}>
+                    <p>Bạn có chắc chắn muốn xóa người dùng này không?</p>
+                    <button onClick={handleDeleteUser} className={styles.confirmBtn}>Xác nhận</button>
+                    <button onClick={() => setShowDeleteModal(false)} className={styles.cancelBtn}>Hủy</button>
                 </div>
             )}
         </div>

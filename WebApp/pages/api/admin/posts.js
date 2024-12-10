@@ -66,15 +66,30 @@ export default async function handler(req, res) {
         // Handle DELETE (delete post)
         if (req.method === "DELETE") {
             const { id } = req.body;
+
+            console.log("Received delete request for post ID:", id);
+
             if (!id) {
                 return res.status(400).json({
                     message: "Post ID is required.",
-                });        }
-            const postDoc = doc(postsRef, id);
-            await deleteDoc(postDoc);
+                });
+            }
 
-            return res.status(200).json({ message: "Post deleted successfully." });
+            try {
+                const postDoc = doc(postsRef, id);
+                console.log("Deleting document:", postDoc);
+
+                await deleteDoc(postDoc);
+
+                console.log("Post deleted successfully");
+                return res.status(200).json({ message: "Post deleted successfully." });
+            } catch (error) {
+                console.error("Error while deleting document:", error);
+                return res.status(500).json({ message: "Failed to delete post." });
+            }
         }
+
+
         // Handle comments API
         if (req.query.action === "comments") {
             const { postId } = req.query;
