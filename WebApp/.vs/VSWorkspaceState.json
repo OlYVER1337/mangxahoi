@@ -7,9 +7,8 @@
     "\\pages\\api",
     "\\pages\\api\\admin",
     "\\pages\\api\\auth",
-    "\\public",
     "\\styles"
   ],
-  "SelectedNode": "\\pages\\api\\admin\\posts.js",
+  "SelectedNode": "\\components\\Login.js",
   "PreviewInSolutionExplorer": false
 }
