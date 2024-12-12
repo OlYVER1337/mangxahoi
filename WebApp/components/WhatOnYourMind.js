@@ -20,7 +20,7 @@ const WhatsOnYourMind = () => {
     const addImageToPost = (e) => {
         const reader = new FileReader();
         if (e.target.files[0]) { // e.target.files[0] là file đầu tiên được chọn
-            reader.readAsDataURL(e.target.files[0]); // Đọc file và chuyển đổi thành dạng base64 URL
+            reader.readAsDataURL(e.target.files[0]); // Đọc file vzà chuyển đổi thành dạng base64 URL
         }
 
         reader.onload = (readerEvent) => {    // Khi quá trình đọc file hoàn tất

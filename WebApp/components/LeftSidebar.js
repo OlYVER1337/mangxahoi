@@ -4,12 +4,10 @@ import React from "react";
 import LeftSidebarLink from "./LeftSidebarLink";
 import { useSession } from "next-auth/react";
 import { BsChevronDown } from "react-icons/bs";
-import { useUser } from './UserContext';
 
 const LeftSidebar = () => {
     const { data: session } = useSession();
     const router = useRouter(); // Khởi tạo router
-    const { user } = useUser();
 
     const gotoBlog = () => {
         router.push("/Blog"); // Điều hướng đến trang /Blog

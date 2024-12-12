@@ -6,10 +6,10 @@ const Contact = () => {
       <div className="flex gap-3 items-center">
         <img
           className="h-[34px] rounded-full"
-          src="/bill_gates.jpg"
-          alt="bill gates"
+          src="/messi.jpg"
+          alt="dp"
         />
-        <h1 className="font-medium">Bill Gates</h1>
+        <h1 className="font-medium">messi</h1>
       </div>
     </div>
   );

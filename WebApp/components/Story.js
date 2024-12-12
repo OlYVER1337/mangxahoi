@@ -9,9 +9,9 @@ import SingleStory from "./SingleStory";
 const Story = () => {
   const singleStoryData = [
     {
-      title: "Bill Gates",
-      img: "/bill_gates.jpg",
-      postImg: "bg-[url(/building.jpg)]",
+      title: "ronaldo",
+      img: "/ronaldo.jpg",
+      postImg: "bg-[url(/re.jpg)]",
     },
     {
       title: "Elon Musk",
@@ -24,19 +24,19 @@ const Story = () => {
       postImg: "bg-[url(/building.jpg)]",
     },
     {
-      title: "Elon Musk",
-      img: "/elon_musk.jpg",
-      postImg: "bg-[url(/gaming_mouse.jpg)]",
+      title: "messi",
+      img: "/messi.jpg",
+      postImg: "bg-[url(/win.jpg)]",
     },
     {
-      title: "Bill Gates",
-      img: "/bill_gates.jpg",
-      postImg: "bg-[url(/building.jpg)]",
+      title: "gordon-ramsay",
+      img: "/gordon-ramsay.jpg",
+      postImg: "bg-[url(/family.jpg)]",
     },
     {
-      title: "Elon Musk",
-      img: "/elon_musk.jpg",
-      postImg: "bg-[url(/gaming_mouse.jpg)]",
+      title: "lmht",
+      img: "/lol.jpg",
+      postImg: "bg-[url(/T1.jpg)]",
     },
   ];
 
