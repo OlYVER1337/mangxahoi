@@ -130,7 +130,7 @@ const UserProfile = ({ session, update }) => {
                 {/* Các nút thao tác */}
                 <div className="flex justify-end space-x-3 mt-4">
                     <a 
-                        href="/change-password" 
+                        href="#" 
                         className="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition"
                     >
                         Đổi mật khẩu

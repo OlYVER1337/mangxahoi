@@ -5,7 +5,7 @@ const Contact = () => {
     <div className="mt-4">
       <div className="flex gap-3 items-center">
         <img
-          className="h-[34px] rounded-full"
+          className="w-[40px] h-[40px] rounded-full object-cover "
           src="/messi.jpg"
           alt="dp"
         />
